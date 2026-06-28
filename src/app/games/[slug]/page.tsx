@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { GameDetails } from "@/components/games/game-details";
-import { getLibraryState, upsertGameCache } from "@/lib/firebase/firestore";
+import { getLibraryState, getUserGameRating, upsertGameCache } from "@/lib/firebase/firestore";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { getIgdbGame } from "@/lib/igdb";
 import type { LibraryState } from "@/lib/types";
@@ -20,10 +20,11 @@ export default async function GameDetailsPage({ params }: GameDetailsPageProps) 
 
   let libraryState: LibraryState = null;
   if (user) libraryState = await getLibraryState(user.uid, game.rawgId);
+  const userRating = await getUserGameRating(game.rawgId);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
-      <GameDetails game={game} libraryState={libraryState} />
+      <GameDetails game={game} libraryState={libraryState} userRating={userRating} />
     </main>
   );
 }

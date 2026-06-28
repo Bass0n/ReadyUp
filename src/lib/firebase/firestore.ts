@@ -3,7 +3,7 @@ import "server-only";
 import { FieldValue, type DocumentSnapshot, type QueryDocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
 import type { GameStatus } from "@/lib/statuses";
-import type { FriendProfile, FriendRequest, LibraryGame, LibraryState, NormalizedGame } from "@/lib/types";
+import type { FriendProfile, FriendRequest, LibraryGame, LibraryState, NormalizedGame, UserGameRating } from "@/lib/types";
 
 type UserGameDocument = {
   rawgId: number;
@@ -369,6 +369,24 @@ export async function getUserLibrary(userId: string): Promise<LibraryGame[]> {
     .get();
 
   return snapshot.docs.map(mapLibraryDoc);
+}
+
+export async function getUserGameRating(rawgId: number): Promise<UserGameRating> {
+  const usersSnapshot = await adminDb().collection("users").get();
+  const gameRefs = usersSnapshot.docs.map((userDoc) => userGameRef(userDoc.id, rawgId));
+  const gameDocs: DocumentSnapshot[] = gameRefs.length ? await adminDb().getAll(...gameRefs) : [];
+
+  const ratings = gameDocs
+    .filter((doc) => doc.exists)
+    .map((doc) => (doc.data() as UserGameDocument).rating)
+    .filter((rating): rating is number => typeof rating === "number");
+
+  if (!ratings.length) return { average: null, count: 0 };
+
+  const total = ratings.reduce((sum, rating) => sum + rating, 0);
+  const average = Math.round((total / ratings.length) * 10) / 10;
+
+  return { average, count: ratings.length };
 }
 
 export async function getLibraryState(userId: string, rawgId: number): Promise<LibraryState> {

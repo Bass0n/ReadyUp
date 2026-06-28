@@ -45,3 +45,8 @@ export type FriendRequest = {
   to: FriendProfile;
   status: "pending" | "accepted" | "denied";
 };
+
+export type UserGameRating = {
+  average: number | null;
+  count: number;
+};

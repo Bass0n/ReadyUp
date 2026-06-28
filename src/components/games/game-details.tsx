@@ -1,13 +1,14 @@
 import { AddToLibraryButton } from "@/components/games/add-to-library-button";
 import { GameBannerPreview } from "@/components/games/game-banner-preview";
-import type { LibraryState, NormalizedGame } from "@/lib/types";
+import type { LibraryState, NormalizedGame, UserGameRating } from "@/lib/types";
 
 type GameDetailsProps = {
   game: NormalizedGame;
   libraryState: LibraryState;
+  userRating: UserGameRating;
 };
 
-export function GameDetails({ game, libraryState }: GameDetailsProps) {
+export function GameDetails({ game, libraryState, userRating }: GameDetailsProps) {
   return (
     <article className="grid gap-8">
       <GameBannerPreview
@@ -27,6 +28,7 @@ export function GameDetails({ game, libraryState }: GameDetailsProps) {
             <div><dt className="text-slate-400">Platforms</dt><dd className="mt-1 text-slate-100">{game.platforms.join(", ") || "Unknown"}</dd></div>
             <div><dt className="text-slate-400">IGDB rating</dt><dd className="mt-1 text-slate-100">{game.rawgRating ?? "N/A"}</dd></div>
             <div><dt className="text-slate-400">Metacritic</dt><dd className="mt-1 text-slate-100">{game.metacritic ?? "N/A"}</dd></div>
+            <div><dt className="text-slate-400">User rating</dt><dd className="mt-1 text-slate-100">{formatUserRating(userRating)}</dd></div>
           </dl>
         </section>
         <aside className="h-fit rounded-lg border border-line bg-panel p-6">
@@ -37,4 +39,9 @@ export function GameDetails({ game, libraryState }: GameDetailsProps) {
       </div>
     </article>
   );
+}
+
+function formatUserRating(userRating: UserGameRating) {
+  if (userRating.average === null) return "N/A";
+  return userRating.average.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
