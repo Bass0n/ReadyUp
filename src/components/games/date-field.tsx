@@ -16,14 +16,15 @@ export function DateField({ disabled, onChange, value }: DateFieldProps) {
   }, [value]);
 
   function updateDraft(nextDraft: string) {
-    setDraft(nextDraft);
+    const formattedDraft = formatDateDraft(nextDraft);
+    setDraft(formattedDraft);
 
-    if (!nextDraft.trim()) {
+    if (!formattedDraft.trim()) {
       onChange("");
       return;
     }
 
-    const nextValue = parseDisplayDate(nextDraft);
+    const nextValue = parseDisplayDate(formattedDraft);
     if (nextValue) onChange(nextValue);
   }
 
@@ -38,6 +39,7 @@ export function DateField({ disabled, onChange, value }: DateFieldProps) {
         type="text"
         inputMode="numeric"
         placeholder="dd/mm/yyyy"
+        maxLength={10}
         value={draft}
         disabled={disabled}
         onBlur={resetInvalidDraft}
@@ -63,6 +65,15 @@ export function formatDisplayDate(value: string | null) {
   if (!match) return value;
 
   return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
+function formatDateDraft(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  const day = digits.slice(0, 2);
+  const month = digits.slice(2, 4);
+  const year = digits.slice(4, 8);
+
+  return [day, month, year].filter(Boolean).join("/");
 }
 
 function parseDisplayDate(value: string) {
