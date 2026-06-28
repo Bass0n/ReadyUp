@@ -163,7 +163,12 @@ export function GameCard({ item, readOnly = false }: GameCardProps) {
               <StatusSelect disabled={isPending} value={status} onOpenChange={setIsControlsOpen} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
               <RatingSelect disabled={isPending} value={rating} onOpenChange={setIsControlsOpen} onChange={(event) => updateRating(event.target.value)} />
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-3 grid gap-2 text-sm">
+              <ReadOnlyPill label="Status" value={status} />
+              <ReadOnlyPill label="Rating" value={rating || "No rating"} />
+            </div>
+          )}
         </div>
       </div>
       {isDetailsOpen ? (
@@ -265,6 +270,15 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="text-slate-400">{label}</dt>
       <dd className="mt-1 text-base text-slate-100">{value}</dd>
+    </div>
+  );
+}
+
+function ReadOnlyPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-line bg-slate-950/35 px-3 py-2 text-center">
+      <span className="sr-only">{label}: </span>
+      <span className="font-medium text-white">{value}</span>
     </div>
   );
 }
