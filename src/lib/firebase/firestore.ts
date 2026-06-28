@@ -24,6 +24,7 @@ type UserProfileDocument = {
   email?: string | null;
   emailLower?: string | null;
   displayName?: string | null;
+  displayNameLower?: string | null;
   avatarUrl?: string | null;
 };
 
@@ -35,6 +36,18 @@ type FriendRequestDocument = {
 
 function now() {
   return FieldValue.serverTimestamp();
+}
+
+function normalizeDisplayName(displayName: string) {
+  return displayName.trim().replace(/\s+/g, " ");
+}
+
+function displayNameKey(displayName: string) {
+  return normalizeDisplayName(displayName).toLowerCase();
+}
+
+function displayNameRef(displayNameLower: string) {
+  return adminDb().collection("display_names").doc(encodeURIComponent(displayNameLower));
 }
 
 export function gameCacheRef(rawgId: number) {
@@ -86,22 +99,111 @@ export async function upsertUserProfile(user: {
   displayName?: string | null;
   photoURL?: string | null;
 }) {
-  await adminDb().collection("users").doc(user.uid).set(
-    {
+  const db = adminDb();
+  const profileRef = userRef(user.uid);
+  const normalizedDisplayName = user.displayName ? normalizeDisplayName(user.displayName) : null;
+  const normalizedDisplayNameKey = normalizedDisplayName ? displayNameKey(normalizedDisplayName) : null;
+
+  await db.runTransaction(async (transaction) => {
+    const profileSnapshot = await transaction.get(profileRef);
+    const existingProfile = profileSnapshot.data() as UserProfileDocument | undefined;
+    const profileUpdate: UserProfileDocument & { updatedAt: FieldValue; createdAt?: FieldValue } = {
       email: user.email ?? null,
       emailLower: user.email?.toLowerCase() ?? null,
-      displayName: user.displayName ?? null,
       avatarUrl: user.photoURL ?? null,
-      updatedAt: now(),
-      createdAt: now()
-    },
-    { merge: true }
-  );
+      updatedAt: now()
+    };
+
+    if (!profileSnapshot.exists) profileUpdate.createdAt = now();
+
+    if (!existingProfile?.displayName && normalizedDisplayName && normalizedDisplayName.length >= 2 && normalizedDisplayName.length <= 32 && normalizedDisplayNameKey) {
+      const nameRef = displayNameRef(normalizedDisplayNameKey);
+      const nameSnapshot = await transaction.get(nameRef);
+
+      if (!nameSnapshot.exists || nameSnapshot.data()?.userId === user.uid) {
+        transaction.set(nameRef, { userId: user.uid, displayName: normalizedDisplayName, updatedAt: now(), createdAt: now() }, { merge: true });
+        profileUpdate.displayName = normalizedDisplayName;
+        profileUpdate.displayNameLower = normalizedDisplayNameKey;
+      }
+    }
+
+    transaction.set(profileRef, profileUpdate, { merge: true });
+  });
 }
 
 export async function getUserProfile(userId: string) {
   const snapshot = await userRef(userId).get();
   return snapshot.exists ? snapshot.data() : null;
+}
+
+export async function updateUserDisplayName(userId: string, displayName: string) {
+  const normalizedDisplayName = normalizeDisplayName(displayName);
+  const normalizedDisplayNameKey = displayNameKey(normalizedDisplayName);
+
+  if (normalizedDisplayName.length < 2) throw new Error("Display name must be at least 2 characters.");
+  if (normalizedDisplayName.length > 32) throw new Error("Display name must be 32 characters or fewer.");
+
+  await adminDb().runTransaction(async (transaction) => {
+    const profileSnapshot = await transaction.get(userRef(userId));
+    if (!profileSnapshot.exists) throw new Error("Profile not found.");
+
+    const profile = profileSnapshot.data() as UserProfileDocument;
+    const previousDisplayNameKey = profile.displayNameLower ?? (profile.displayName ? displayNameKey(profile.displayName) : null);
+    const nameRef = displayNameRef(normalizedDisplayNameKey);
+    const nameSnapshot = await transaction.get(nameRef);
+
+    if (previousDisplayNameKey === normalizedDisplayNameKey) {
+      if (nameSnapshot.exists && nameSnapshot.data()?.userId !== userId) {
+        throw new Error("That display name is already taken.");
+      }
+
+      transaction.set(userRef(userId), { displayName: normalizedDisplayName, displayNameLower: normalizedDisplayNameKey, updatedAt: now() }, { merge: true });
+      transaction.set(nameRef, { userId, displayName: normalizedDisplayName, updatedAt: now(), createdAt: now() }, { merge: true });
+      return;
+    }
+
+    if (nameSnapshot.exists && nameSnapshot.data()?.userId !== userId) {
+      throw new Error("That display name is already taken.");
+    }
+
+    transaction.set(userRef(userId), { displayName: normalizedDisplayName, displayNameLower: normalizedDisplayNameKey, updatedAt: now() }, { merge: true });
+    transaction.set(nameRef, { userId, displayName: normalizedDisplayName, updatedAt: now(), createdAt: now() }, { merge: true });
+    if (previousDisplayNameKey) transaction.delete(displayNameRef(previousDisplayNameKey));
+  });
+
+  await updateDenormalizedFriendProfile(userId);
+  return normalizedDisplayName;
+}
+
+async function updateDenormalizedFriendProfile(userId: string) {
+  const profile = await getFriendProfile(userId);
+  if (!profile) return;
+
+  const [friendsSnapshot, fromRequestsSnapshot, toRequestsSnapshot] = await Promise.all([
+    userRef(userId).collection("friends").get(),
+    adminDb().collection("friend_requests").where("from.userId", "==", userId).get(),
+    adminDb().collection("friend_requests").where("to.userId", "==", userId).get()
+  ]);
+
+  const batch = adminDb().batch();
+  let writeCount = 0;
+
+  friendsSnapshot.docs.forEach((friendDoc) => {
+    batch.set(friendRef(friendDoc.id, userId), profile, { merge: true });
+    writeCount += 1;
+  });
+
+  fromRequestsSnapshot.docs.forEach((requestDoc) => {
+    batch.set(requestDoc.ref, { from: profile, updatedAt: now() }, { merge: true });
+    writeCount += 1;
+  });
+
+  toRequestsSnapshot.docs.forEach((requestDoc) => {
+    batch.set(requestDoc.ref, { to: profile, updatedAt: now() }, { merge: true });
+    writeCount += 1;
+  });
+
+  if (writeCount > 0) await batch.commit();
 }
 
 export async function findUserProfileByEmail(email: string): Promise<FriendProfile | null> {
@@ -193,6 +295,17 @@ export async function respondToFriendRequest(userId: string, requestId: string, 
   batch.update(requestSnapshot.ref, { status: "accepted", updatedAt: now() });
 
   await batch.commit();
+}
+
+export async function cancelFriendRequest(userId: string, requestId: string) {
+  const requestSnapshot = await friendRequestRef(requestId).get();
+  if (!requestSnapshot.exists) throw new Error("Friend request not found.");
+
+  const request = requestSnapshot.data() as FriendRequestDocument;
+  if (request.from.userId !== userId) throw new Error("You cannot cancel this friend request.");
+  if (request.status !== "pending") throw new Error("This friend request is no longer pending.");
+
+  await requestSnapshot.ref.update({ status: "denied", updatedAt: now() });
 }
 
 export async function upsertGameCache(game: NormalizedGame) {

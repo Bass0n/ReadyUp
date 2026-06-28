@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { type FormEvent, useState, useTransition } from "react";
+import { type FormEvent, useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { FriendProfile, FriendRequest } from "@/lib/types";
 
@@ -12,10 +11,38 @@ type FriendsViewProps = {
   outgoingRequests: FriendRequest[];
 };
 
+type FriendsOverview = FriendsViewProps;
+
 export function FriendsView({ friends, incomingRequests, outgoingRequests }: FriendsViewProps) {
-  const router = useRouter();
   const [email, setEmail] = useState("");
+  const [overview, setOverview] = useState<FriendsOverview>({ friends, incomingRequests, outgoingRequests });
   const [isPending, startTransition] = useTransition();
+
+  const refreshFriends = useCallback(async () => {
+    const response = await fetch("/api/friends", { cache: "no-store" });
+    if (!response.ok) return;
+
+    setOverview(await response.json() as FriendsOverview);
+  }, []);
+
+  useEffect(() => {
+    setOverview({ friends, incomingRequests, outgoingRequests });
+  }, [friends, incomingRequests, outgoingRequests]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(refreshFriends, 5_000);
+
+    function refreshWhenVisible() {
+      if (document.visibilityState === "visible") void refreshFriends();
+    }
+
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [refreshFriends]);
 
   function sendRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,7 +62,7 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
 
       setEmail("");
       toast.success("Friend request sent.");
-      router.refresh();
+      await refreshFriends();
     });
   }
 
@@ -54,7 +81,24 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
       }
 
       toast.success(action === "accept" ? "Friend request accepted." : "Friend request denied.");
-      router.refresh();
+      await refreshFriends();
+    });
+  }
+
+  function cancelRequest(requestId: string) {
+    startTransition(async () => {
+      const response = await fetch(`/api/friends/requests/${requestId}`, {
+        method: "DELETE"
+      });
+
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        toast.error(body?.error ?? "Could not cancel friend request.");
+        return;
+      }
+
+      toast.success("Friend request canceled.");
+      await refreshFriends();
     });
   }
 
@@ -80,7 +124,7 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
       <section className="rounded-lg border border-line bg-panel p-6">
         <h2 className="text-xl font-semibold">Incoming requests</h2>
         <div className="mt-4 grid gap-3">
-          {incomingRequests.length ? incomingRequests.map((request) => (
+          {overview.incomingRequests.length ? overview.incomingRequests.map((request) => (
             <div key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface p-3">
               <UserSummary profile={request.from} />
               <div className="flex gap-2">
@@ -99,7 +143,7 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
       <section className="rounded-lg border border-line bg-panel p-6">
         <h2 className="text-xl font-semibold">Friends</h2>
         <div className="mt-4 grid gap-3">
-          {friends.length ? friends.map((friend) => (
+          {overview.friends.length ? overview.friends.map((friend) => (
             <div key={friend.userId} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface p-3">
               <UserSummary profile={friend} />
               <Link className="rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-400" href={`/friends/${friend.userId}/library`}>
@@ -113,9 +157,12 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
       <section className="rounded-lg border border-line bg-panel p-6">
         <h2 className="text-xl font-semibold">Sent requests</h2>
         <div className="mt-4 grid gap-3">
-          {outgoingRequests.length ? outgoingRequests.map((request) => (
-            <div key={request.id} className="rounded-md border border-line bg-surface p-3">
+          {overview.outgoingRequests.length ? overview.outgoingRequests.map((request) => (
+            <div key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface p-3">
               <UserSummary profile={request.to} />
+              <button disabled={isPending} onClick={() => cancelRequest(request.id)} className="rounded-md border border-red-300/40 px-3 py-2 text-sm font-semibold text-red-100 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60">
+                Cancel request
+              </button>
             </div>
           )) : <p className="text-sm text-slate-300">No pending sent requests.</p>}
         </div>
