@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import readyUpLogo from "@/assets/readyup-logo.png";
 import { CLEAR_LIBRARY_SEARCH_EVENT } from "@/lib/events";
 
 type ReadyUpLinkProps = {
@@ -19,8 +21,8 @@ export function ReadyUpLink({ signedIn }: ReadyUpLinkProps) {
   }
 
   return (
-    <Link href={href} onClick={handleClick} className="shrink-0 text-xl font-semibold tracking-tight">
-      ReadyUp
+    <Link href={href} onClick={handleClick} className="block w-fit shrink-0 rounded-md outline-none ring-blue-400 focus-visible:ring-2" aria-label="ReadyUp home">
+      <Image src={readyUpLogo} alt="ReadyUp" priority className="h-12 w-auto" />
     </Link>
   );
 }
