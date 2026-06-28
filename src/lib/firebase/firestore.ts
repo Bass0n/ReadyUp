@@ -74,12 +74,16 @@ function requestIdForUsers(fromUserId: string, toUserId: string) {
   return `${fromUserId}_${toUserId}`;
 }
 
+function customAvatarUrl(avatarUrl?: string | null) {
+  return avatarUrl?.startsWith("data:image/") ? avatarUrl : null;
+}
+
 function mapProfile(userId: string, data: UserProfileDocument): FriendProfile {
   return {
     userId,
     displayName: data.displayName ?? null,
     email: data.email ?? null,
-    avatarUrl: data.avatarUrl ?? null
+    avatarUrl: customAvatarUrl(data.avatarUrl)
   };
 }
 
@@ -110,7 +114,7 @@ export async function upsertUserProfile(user: {
     const profileUpdate: UserProfileDocument & { updatedAt: FieldValue; createdAt?: FieldValue } = {
       email: user.email ?? null,
       emailLower: user.email?.toLowerCase() ?? null,
-      avatarUrl: user.photoURL ?? null,
+      avatarUrl: customAvatarUrl(existingProfile?.avatarUrl),
       updatedAt: now()
     };
 
@@ -173,6 +177,11 @@ export async function updateUserDisplayName(userId: string, displayName: string)
 
   await updateDenormalizedFriendProfile(userId);
   return normalizedDisplayName;
+}
+
+export async function updateUserAvatar(userId: string, avatarUrl: string) {
+  await userRef(userId).set({ avatarUrl, updatedAt: now() }, { merge: true });
+  await updateDenormalizedFriendProfile(userId);
 }
 
 async function updateDenormalizedFriendProfile(userId: string) {

@@ -5,6 +5,8 @@ import { Toaster } from "sonner";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { HeaderGameSearch } from "@/components/games/header-game-search";
 import { ReadyUpLink } from "@/components/navigation/readyup-link";
+import { UserAvatar } from "@/components/profile/user-avatar";
+import { getUserProfile } from "@/lib/firebase/firestore";
 import { getCurrentUser } from "@/lib/firebase/session";
 import "./globals.css";
 
@@ -17,6 +19,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const user = await getCurrentUser();
+  const profile = user ? await getUserProfile(user.uid) : null;
 
   return (
     <html lang="en">
@@ -31,8 +34,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                   <Link className="rounded-md px-3 py-2 hover:bg-white/10" href="/friends">
                     Friends
                   </Link>
-                  <Link className="rounded-md px-3 py-2 hover:bg-white/10" href="/profile">
-                    Profile
+                  <Link className="rounded-full p-1 hover:bg-white/10" href="/profile" aria-label="Profile">
+                    <UserAvatar
+                      profile={{
+                        displayName: String(profile?.displayName ?? user.displayName ?? ""),
+                        email: user.email,
+                        avatarUrl: String(profile?.avatarUrl ?? "") || null
+                      }}
+                      size="sm"
+                    />
                   </Link>
                   <SignOutButton />
                 </>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { type FormEvent, useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { UserAvatar } from "@/components/profile/user-avatar";
 import type { FriendProfile, FriendRequest } from "@/lib/types";
 
 type FriendsViewProps = {
@@ -173,9 +174,12 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
 
 function UserSummary({ profile }: { profile: FriendProfile }) {
   return (
-    <div>
-      <p className="font-semibold text-white">{profile.displayName || profile.email || "ReadyUp user"}</p>
-      {profile.email ? <p className="mt-1 text-sm text-slate-400">{profile.email}</p> : null}
+    <div className="flex items-center gap-3">
+      <UserAvatar profile={profile} size="sm" />
+      <div>
+        <p className="font-semibold text-white">{profile.displayName || profile.email || "ReadyUp user"}</p>
+        {profile.email ? <p className="mt-1 text-sm text-slate-400">{profile.email}</p> : null}
+      </div>
     </div>
   );
 }

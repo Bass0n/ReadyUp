@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { LibraryView } from "@/components/games/library-view";
+import { UserAvatar } from "@/components/profile/user-avatar";
 import { areFriends, getFriendProfile, getUserLibrary } from "@/lib/firebase/firestore";
 import { getCurrentUser } from "@/lib/firebase/session";
 
@@ -26,9 +27,12 @@ export default async function FriendLibraryPage({ params }: FriendLibraryPagePro
 
   return (
     <main className="mx-auto grid max-w-[100rem] gap-8 px-4 py-8">
-      <section>
-        <h1 className="text-3xl font-bold tracking-tight">{friend.displayName || friend.email || "Friend"}&apos;s library</h1>
-        <p className="mt-2 text-slate-300">Read-only preview. You can view their games, but only they can edit them.</p>
+      <section className="flex items-center gap-4">
+        <UserAvatar profile={friend} size="lg" />
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{friend.displayName || friend.email || "Friend"}&apos;s library</h1>
+          <p className="mt-2 text-slate-300">Read-only preview. You can view their games, but only they can edit them.</p>
+        </div>
       </section>
       <LibraryView games={games} readOnly />
     </main>
