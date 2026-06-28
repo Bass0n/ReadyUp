@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { GameDetails } from "@/components/games/game-details";
 import { getLibraryState, upsertGameCache } from "@/lib/firebase/firestore";
 import { getCurrentUser } from "@/lib/firebase/session";
-import { getRawgGame } from "@/lib/rawg";
+import { getIgdbGame } from "@/lib/igdb";
 import type { LibraryState } from "@/lib/types";
 
 type GameDetailsPageProps = {
@@ -11,7 +11,7 @@ type GameDetailsPageProps = {
 
 export default async function GameDetailsPage({ params }: GameDetailsPageProps) {
   const { slug } = await params;
-  const game = await getRawgGame(slug).catch(() => null);
+  const game = await getIgdbGame(slug).catch(() => null);
 
   if (!game) notFound();
 

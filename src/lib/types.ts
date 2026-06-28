@@ -11,6 +11,7 @@ export type NormalizedGame = {
   genres: string[];
   metacritic: number | null;
   rawgRating: number | null;
+  trailerVideoId: string | null;
 };
 
 export type LibraryGame = {

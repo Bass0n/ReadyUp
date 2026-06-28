@@ -17,7 +17,7 @@ export default async function Home() {
           Keep your backlog, favorites, and finished games in one place.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
-          Search RAWG, add games to your library, rate them, and track whether they are playing, finished, completed,
+          Search IGDB, add games to your library, rate them, and track whether they are playing, finished, completed,
           on hold, or dropped.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
@@ -31,7 +31,7 @@ export default async function Home() {
       </section>
       <section className="grid gap-4">
         {[
-          { icon: Search, title: "Find games fast", text: "Search RAWG without exposing your API key." },
+          { icon: Search, title: "Find games fast", text: "Search IGDB without exposing your API credentials." },
           { icon: ListChecks, title: "Track progress", text: "Update status and rating from search, details, or library." },
           { icon: Gamepad2, title: "Own your list", text: "Your library is stored in Firebase Firestore." }
         ].map((item) => (

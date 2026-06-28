@@ -22,11 +22,11 @@ export function SearchResultItem({ game, libraryState }: SearchResultItemProps) 
   }
 
   return (
-    <article className="grid gap-4 rounded-lg border border-line bg-panel p-3 sm:grid-cols-[140px_1fr]">
+    <article className="grid gap-4 rounded-lg border border-line bg-panel p-3 sm:grid-cols-[96px_1fr]">
       <Link
         href={gameHref}
         onClick={clearSearchBeforeNavigation}
-        className="relative aspect-video overflow-hidden rounded-md bg-surface focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="relative aspect-[3/4] overflow-hidden rounded-md bg-surface focus:outline-none focus:ring-2 focus:ring-blue-400"
         aria-label={"View details for " + game.name}
       >
         <GameImage src={game.backgroundImage} alt={game.name} />

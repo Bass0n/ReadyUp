@@ -7,6 +7,10 @@ type GameImageProps = {
   priority?: boolean;
 };
 
+function higherQualityImageUrl(src: string) {
+  return src.replace("/t_cover_big/", "/t_cover_big_2x/");
+}
+
 export function GameImage({ src, alt, className, priority }: GameImageProps) {
   if (!src) {
     return (
@@ -16,5 +20,5 @@ export function GameImage({ src, alt, className, priority }: GameImageProps) {
     );
   }
 
-  return <Image src={src} alt={alt} fill priority={priority} sizes="(max-width: 768px) 100vw, 420px" className="object-cover" />;
+  return <Image src={higherQualityImageUrl(src)} alt={alt} fill priority={priority} sizes="(max-width: 768px) 100vw, 420px" className="object-cover" />;
 }

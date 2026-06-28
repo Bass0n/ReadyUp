@@ -43,7 +43,7 @@ export function AddToLibraryButton({ game, libraryState, compact, onSaved }: Add
   }
 
   return (
-    <div className={compact ? "flex flex-wrap items-center gap-2" : "grid gap-3 sm:grid-cols-[1fr_1fr_auto]"}>
+    <div className={compact ? "flex flex-wrap items-center gap-2" : "grid gap-3"}>
       <StatusSelect value={status} onChange={(event) => setStatus(event.target.value as GameStatus)} />
       <RatingSelect value={rating} onChange={(event) => setRating(event.target.value)} />
       <button type="button" disabled={isPending} onClick={save} className="rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60">

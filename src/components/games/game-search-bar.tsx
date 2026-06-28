@@ -40,7 +40,7 @@ export function GameSearchBar() {
     const timeout = window.setTimeout(() => {
       startTransition(async () => {
         setError(null);
-        const response = await fetch(`/api/rawg/search?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal }).catch(() => null);
+        const response = await fetch(`/api/igdb/search?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal }).catch(() => null);
 
         if (!response) return;
         if (!response.ok) {

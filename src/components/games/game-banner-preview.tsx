@@ -17,6 +17,7 @@ type GameBannerPreviewProps = {
   src: string | null;
   alt: string;
   subtitle: string;
+  trailerVideoId: string | null;
 };
 
 type DragState = {
@@ -36,7 +37,7 @@ type Size = {
 const ZOOM_SCALE = 2.25;
 const DRAG_THRESHOLD = 4;
 
-export function GameBannerPreview({ src, alt, subtitle }: GameBannerPreviewProps) {
+export function GameBannerPreview({ src, alt, subtitle, trailerVideoId }: GameBannerPreviewProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -196,26 +197,44 @@ export function GameBannerPreview({ src, alt, subtitle }: GameBannerPreviewProps
 
   return (
     <>
-      <div
-        role={src ? "button" : undefined}
-        tabIndex={src ? 0 : undefined}
-        onClick={openPreview}
-        onKeyDown={openPreviewWithKeyboard}
-        className="group relative min-h-[260px] w-full overflow-hidden rounded-lg border border-line bg-surface text-left outline-none ring-blue-400 focus:ring-2 sm:min-h-[420px]"
-        aria-label={src ? "Open full image preview for " + alt : undefined}
-      >
-        <GameImage src={src} alt={alt} priority />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/20 to-transparent" />
-        {src ? (
-          <div className="absolute right-4 top-4 rounded-md bg-black/55 px-3 py-1 text-xs font-medium text-white opacity-0 transition group-hover:opacity-100 group-focus:opacity-100">
-            Preview image
+      <section className="rounded-lg border border-line bg-panel p-4 sm:p-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(220px,320px)_1fr] lg:items-start">
+          <div
+            role={src ? "button" : undefined}
+            tabIndex={src ? 0 : undefined}
+            onClick={openPreview}
+            onKeyDown={openPreviewWithKeyboard}
+            className="group relative aspect-[3/4] w-full max-w-xs overflow-hidden rounded-lg bg-surface text-left outline-none ring-blue-400 focus:ring-2 lg:h-[427px] lg:max-w-none lg:aspect-auto"
+            aria-label={src ? "Open full image preview for " + alt : undefined}
+          >
+            <GameImage src={src} alt={alt} priority />
+            {src ? (
+              <div className="absolute right-3 top-3 rounded-md bg-black/55 px-3 py-1 text-xs font-medium text-white opacity-0 transition group-hover:opacity-100 group-focus:opacity-100">
+                Preview image
+              </div>
+            ) : null}
           </div>
-        ) : null}
-        <div className="absolute bottom-0 max-w-4xl p-6 sm:p-8">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">{alt}</h1>
-          <p className="mt-3 text-sm text-slate-200">{subtitle}</p>
+          <div className="relative aspect-video overflow-hidden rounded-lg border border-line bg-surface lg:h-[427px] lg:aspect-auto">
+            {trailerVideoId ? (
+              <iframe
+                src={"https://www.youtube-nocookie.com/embed/" + trailerVideoId}
+                title={alt + " trailer"}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="absolute inset-0 h-full w-full"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                No trailer available
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+        <div className="mt-4 max-w-5xl">
+          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">{alt}</h1>
+          <p className="mt-3 text-sm text-slate-300">{subtitle}</p>
+        </div>
+      </section>
 
       {isOpen && src ? (
         <div

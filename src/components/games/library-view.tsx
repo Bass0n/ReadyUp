@@ -126,7 +126,7 @@ export function LibraryView({ games }: LibraryViewProps) {
       </div>
 
       {visibleGames.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {visibleGames.map((item) => (
             <GameCard key={item.id} item={item} />
           ))}

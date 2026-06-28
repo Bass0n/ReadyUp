@@ -14,6 +14,7 @@ export function GameDetails({ game, libraryState }: GameDetailsProps) {
         src={game.backgroundImage}
         alt={game.name}
         subtitle={[game.released, game.platforms.join(", ")].filter(Boolean).join(" - ")}
+        trailerVideoId={game.trailerVideoId}
       />
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="rounded-lg border border-line bg-panel p-6">
@@ -24,7 +25,7 @@ export function GameDetails({ game, libraryState }: GameDetailsProps) {
           <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
             <div><dt className="text-slate-400">Genres</dt><dd className="mt-1 text-slate-100">{game.genres.join(", ") || "Unknown"}</dd></div>
             <div><dt className="text-slate-400">Platforms</dt><dd className="mt-1 text-slate-100">{game.platforms.join(", ") || "Unknown"}</dd></div>
-            <div><dt className="text-slate-400">RAWG rating</dt><dd className="mt-1 text-slate-100">{game.rawgRating ?? "N/A"}</dd></div>
+            <div><dt className="text-slate-400">IGDB rating</dt><dd className="mt-1 text-slate-100">{game.rawgRating ?? "N/A"}</dd></div>
             <div><dt className="text-slate-400">Metacritic</dt><dd className="mt-1 text-slate-100">{game.metacritic ?? "N/A"}</dd></div>
           </dl>
         </section>

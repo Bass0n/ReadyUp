@@ -21,6 +21,7 @@ export function GameCard({ item }: GameCardProps) {
   const [status, setStatus] = useState<GameStatus>(item.status);
   const [rating, setRating] = useState(item.rating ? String(item.rating) : "");
   const [isPending, startTransition] = useTransition();
+  const [isControlsOpen, setIsControlsOpen] = useState(false);
 
   useEffect(() => {
     setStatus(item.status);
@@ -81,9 +82,9 @@ export function GameCard({ item }: GameCardProps) {
   }
 
   return (
-    <article className="group overflow-hidden rounded-lg border border-line bg-panel">
-      <div className="relative aspect-[16/10] bg-surface">
-        <Link href={`/games/${item.game.slug}`} className="block h-full">
+    <article className="group overflow-visible rounded-lg border border-line bg-panel">
+      <div className="relative aspect-[3/4] rounded-lg bg-surface">
+        <Link href={`/games/${item.game.slug}`} className="relative block h-full overflow-hidden rounded-lg">
           <GameImage src={item.game.backgroundImage} alt={item.game.name} />
         </Link>
         <button
@@ -92,24 +93,18 @@ export function GameCard({ item }: GameCardProps) {
           onClick={remove}
           aria-label={`Remove ${item.game.name} from your library`}
           title="Remove from library"
-          className="pointer-events-none absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-md border border-red-300/40 bg-slate-950/80 text-red-100 opacity-0 shadow-sm backdrop-blur transition-opacity duration-150 ease-out hover:bg-red-500/25 focus-visible:pointer-events-auto focus-visible:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100 disabled:opacity-60"
+          className="pointer-events-none absolute right-2 top-2 z-20 grid h-8 w-8 place-items-center rounded-md border border-red-300/40 bg-slate-950/80 text-red-100 opacity-0 shadow-sm backdrop-blur transition-opacity duration-150 ease-out hover:bg-red-500/25 focus-visible:pointer-events-auto focus-visible:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100 disabled:opacity-60"
         >
           <Trash2 className="h-4 w-4" aria-hidden="true" />
         </button>
-      </div>
-      <div className="grid gap-3 p-4">
-        <div>
-          <Link href={`/games/${item.game.slug}`} className="font-semibold text-white hover:text-blue-200">
+        <div className={"pointer-events-none absolute inset-x-0 bottom-0 z-10 translate-y-4 rounded-b-lg bg-surface p-4 opacity-0 transition duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 " + (isControlsOpen ? "pointer-events-auto translate-y-0 opacity-100" : "")}>
+          <Link href={`/games/${item.game.slug}`} className="block font-semibold text-white hover:text-blue-200">
             {item.game.name}
           </Link>
-          <p className="mt-1 text-sm text-slate-300">
-            {status}
-            {rating ? ` - ${rating}` : ""}
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <StatusSelect disabled={isPending} value={status} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
-          <RatingSelect disabled={isPending} value={rating} onChange={(event) => updateRating(event.target.value)} />
+          <div className="mt-3 grid gap-2">
+            <StatusSelect disabled={isPending} value={status} onOpenChange={setIsControlsOpen} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
+            <RatingSelect disabled={isPending} value={rating} onOpenChange={setIsControlsOpen} onChange={(event) => updateRating(event.target.value)} />
+          </div>
         </div>
       </div>
     </article>

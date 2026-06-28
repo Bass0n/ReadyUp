@@ -1,16 +1,18 @@
-import type { SelectHTMLAttributes } from "react";
+"use client";
+
+import { CustomSelect } from "@/components/games/custom-select";
 import { GAME_STATUSES } from "@/lib/statuses";
 
-type StatusSelectProps = SelectHTMLAttributes<HTMLSelectElement>;
+type StatusSelectProps = {
+  className?: string;
+  disabled?: boolean;
+  onChange?: (event: { target: { value: string } }) => void;
+  onOpenChange?: (isOpen: boolean) => void;
+  value?: string;
+};
+
+const STATUS_OPTIONS = GAME_STATUSES.map((status) => ({ value: status, label: status }));
 
 export function StatusSelect(props: StatusSelectProps) {
-  return (
-    <select {...props} className="rounded-md border border-line bg-surface px-3 py-2 text-sm text-white outline-none ring-blue-400 focus:ring-2">
-      {GAME_STATUSES.map((status) => (
-        <option key={status} value={status}>
-          {status}
-        </option>
-      ))}
-    </select>
-  );
+  return <CustomSelect {...props} options={STATUS_OPTIONS} />;
 }

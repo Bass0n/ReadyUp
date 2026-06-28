@@ -1,6 +1,6 @@
 # ReadyUp
 
-ReadyUp is a Next.js app for tracking personal video game progress. Users can sign up with Firebase Auth, search RAWG for games, add titles to a Firestore-backed library, set a status, rate games from 1 to 10, and remove or update entries later.
+ReadyUp is a Next.js app for tracking personal video game progress. Users can sign up with Firebase Auth, search IGDB for games, add titles to a Firestore-backed library, set a status, rate games from 1 to 10, and remove or update entries later.
 
 ## Stack
 
@@ -9,7 +9,7 @@ ReadyUp is a Next.js app for tracking personal video game progress. Users can si
 - Tailwind CSS
 - Firebase Auth
 - Firebase Firestore
-- RAWG API through server-side routes
+- IGDB API through server-side routes
 
 ## Setup
 
@@ -36,10 +36,11 @@ Fill in:
 - `FIREBASE_PROJECT_ID`
 - `FIREBASE_CLIENT_EMAIL`
 - `FIREBASE_PRIVATE_KEY`
-- `RAWG_API_KEY`: your RAWG API key from https://rawg.io/apidocs.
+- `IGDB_CLIENT_ID`: your Twitch Developer application client ID.
+- `IGDB_CLIENT_SECRET`: your Twitch Developer application client secret.
 - `NEXT_PUBLIC_SITE_URL`: your local or deployed site URL, for example `http://localhost:3000`.
 
-Keep `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, and `RAWG_API_KEY` server-side only.
+Keep `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `IGDB_CLIENT_ID`, and `IGDB_CLIENT_SECRET` server-side only.
 
 ## Firebase Project Setup
 
@@ -68,7 +69,7 @@ users/{userId}
 users/{userId}/games/{rawgId}
 ```
 
-Each user game stores the RAWG id, status, optional rating, notes placeholder, and a denormalized game snapshot for fast library rendering.
+Each user game stores the IGDB id in the existing `rawgId` field for backwards compatibility, plus status, optional rating, notes placeholder, and a denormalized game snapshot for fast library rendering.
 
 ## Firestore Rules
 
@@ -80,9 +81,9 @@ firebase deploy --only firestore:rules
 
 The app also validates status and rating server-side before writing.
 
-## RAWG
+## IGDB
 
-Create a RAWG account and API key at https://rawg.io/apidocs, then set `RAWG_API_KEY` in `.env.local`. All RAWG requests are made by server-side routes or server components so the key is not sent to the browser.
+Create a Twitch Developer application, then set `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET` in `.env.local`. The app requests a Twitch app access token server-side and uses it for IGDB API calls, so credentials and tokens are not sent to the browser.
 
 ## Run
 
@@ -100,4 +101,4 @@ npm run typecheck
 npm run build
 ```
 
-RAWG calls are runtime-only, but game search/details require `RAWG_API_KEY` when used.
+IGDB calls are runtime-only, but game search/details require `IGDB_CLIENT_ID` and `IGDB_CLIENT_SECRET` when used.

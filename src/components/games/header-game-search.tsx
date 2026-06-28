@@ -41,7 +41,13 @@ export function HeaderGameSearch() {
 
   useEffect(() => {
     function closeOnOutsidePointer(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      const target = event.target;
+      const isDropdownMenuClick =
+        target instanceof Element && target.closest("[data-readyup-dropdown-menu='true']");
+
+      if (isDropdownMenuClick) return;
+
+      if (!rootRef.current?.contains(target as Node)) {
         setIsOpen(false);
       }
     }
@@ -62,7 +68,7 @@ export function HeaderGameSearch() {
       startTransition(async () => {
         setError(null);
         const response = await fetch(
-          "/api/rawg/search?q=" + encodeURIComponent(trimmed),
+          "/api/igdb/search?q=" + encodeURIComponent(trimmed),
           { signal: controller.signal }
         ).catch(() => null);
 
