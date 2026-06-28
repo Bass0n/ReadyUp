@@ -50,7 +50,7 @@ export function CustomSelect({ className, defaultValue = "", disabled, onChange,
     function updateMenuPosition() {
       const rect = rootRef.current?.getBoundingClientRect();
       if (!rect) return;
-      setMenuPosition({ left: rect.left + window.scrollX, top: rect.bottom + window.scrollY + 4, width: rect.width });
+      setMenuPosition({ left: rect.left + rect.width / 2 + window.scrollX, top: rect.bottom + window.scrollY + 4, width: rect.width });
     }
 
     updateMenuPosition();
@@ -86,7 +86,7 @@ export function CustomSelect({ className, defaultValue = "", disabled, onChange,
       data-readyup-dropdown-menu="true"
       className="absolute z-[2000] overflow-hidden rounded-md border border-line bg-surface shadow-xl"
       role="listbox"
-      style={{ left: menuPosition.left, top: menuPosition.top, minWidth: menuMinWidth, width: menuPosition.width }}
+      style={{ left: menuPosition.left, top: menuPosition.top, minWidth: menuMinWidth, transform: "translateX(-50%)", width: menuPosition.width }}
     >
       {options.map((option) => {
         const isSelected = option.value === selectedValue;
