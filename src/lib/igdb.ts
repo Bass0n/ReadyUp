@@ -18,6 +18,12 @@ type IgdbVideo = {
   video_id?: string | null;
 };
 
+type IgdbTimeToBeat = {
+  hastily?: number | null;
+  normally?: number | null;
+  completely?: number | null;
+};
+
 type IgdbGame = {
   id: number;
   slug?: string | null;
@@ -132,7 +138,11 @@ function trailerVideoId(videos?: IgdbVideo[] | null) {
   return trailer?.video_id ?? videos?.find((video) => video.video_id)?.video_id ?? null;
 }
 
-function normalizeIgdbGame(game: IgdbGame): NormalizedGame {
+function emptyTimeToBeat(): IgdbTimeToBeat {
+  return { hastily: null, normally: null, completely: null };
+}
+
+function normalizeIgdbGame(game: IgdbGame, timeToBeat: IgdbTimeToBeat = emptyTimeToBeat()): NormalizedGame {
   return {
     rawgId: game.id,
     slug: game.slug ?? fallbackSlug(game),
@@ -144,7 +154,12 @@ function normalizeIgdbGame(game: IgdbGame): NormalizedGame {
     genres: names(game.genres),
     metacritic: game.aggregated_rating ? Math.round(game.aggregated_rating) : null,
     rawgRating: game.total_rating ? Number((game.total_rating / 10).toFixed(1)) : null,
-    trailerVideoId: trailerVideoId(game.videos)
+    trailerVideoId: trailerVideoId(game.videos),
+    timeToBeat: {
+      hastily: timeToBeat.hastily ?? null,
+      normally: timeToBeat.normally ?? null,
+      completely: timeToBeat.completely ?? null
+    }
   };
 }
 
@@ -244,7 +259,7 @@ export async function searchIgdbGames(query: string) {
     searchIgdbByName(query).catch(() => [])
   ]);
 
-  return sortSearchResults(uniqueGames([...nameResults, ...searchResults]), query).slice(0, 20).map(normalizeIgdbGame);
+  return sortSearchResults(uniqueGames([...nameResults, ...searchResults]), query).slice(0, 20).map((game) => normalizeIgdbGame(game));
 }
 
 export async function getIgdbGame(slugOrId: string) {
@@ -264,5 +279,20 @@ export async function getIgdbGame(slugOrId: string) {
 
   const game = games[0];
   if (!game) throw new Error("Game not found.");
-  return normalizeIgdbGame(game);
+
+  const timeToBeat = await getIgdbGameTimeToBeat(game.id).catch(() => emptyTimeToBeat());
+  return normalizeIgdbGame(game, timeToBeat);
+}
+
+async function getIgdbGameTimeToBeat(gameId: number) {
+  const entries = await igdbFetch<IgdbTimeToBeat[]>(
+    "/game_time_to_beats",
+    [
+      "fields hastily,normally,completely;",
+      "where game_id = " + gameId + ";",
+      "limit 1;"
+    ].join("\n")
+  );
+
+  return entries[0] ?? emptyTimeToBeat();
 }

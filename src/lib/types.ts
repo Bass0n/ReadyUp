@@ -12,6 +12,11 @@ export type NormalizedGame = {
   metacritic: number | null;
   rawgRating: number | null;
   trailerVideoId: string | null;
+  timeToBeat: {
+    hastily: number | null;
+    normally: number | null;
+    completely: number | null;
+  };
 };
 
 export type LibraryGame = {
