@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { DateField, formatDisplayDate } from "@/components/games/date-field";
 import { GameImage } from "@/components/games/game-image";
 import { RatingSelect } from "@/components/games/rating-select";
 import { StatusSelect } from "@/components/games/status-select";
@@ -160,8 +161,8 @@ export function GameCard({ item, readOnly = false }: GameCardProps) {
           </Link>
           {!readOnly ? (
             <div className="mt-3 grid gap-2">
-              <StatusSelect disabled={isPending} value={status} onOpenChange={setIsControlsOpen} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
-              <RatingSelect disabled={isPending} value={rating} onOpenChange={setIsControlsOpen} onChange={(event) => updateRating(event.target.value)} />
+              <StatusSelect stableWidth={false} disabled={isPending} value={status} onOpenChange={setIsControlsOpen} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
+              <RatingSelect stableWidth={false} disabled={isPending} value={rating} onOpenChange={setIsControlsOpen} onChange={(event) => updateRating(event.target.value)} />
             </div>
           ) : (
             <div className="mt-3 grid gap-2 text-sm">
@@ -207,47 +208,19 @@ export function GameCard({ item, readOnly = false }: GameCardProps) {
                 <div className="mt-5 grid gap-4 text-sm">
                   <label className="grid gap-1 text-slate-300">
                     Status
-                    <StatusSelect disabled={isPending} value={status} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
+                    <StatusSelect stableWidth={false} disabled={isPending} value={status} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
                   </label>
                   <label className="grid gap-1 text-slate-300">
                     Rating
-                    <RatingSelect disabled={isPending} value={rating} onChange={(event) => updateRating(event.target.value)} />
+                    <RatingSelect stableWidth={false} disabled={isPending} value={rating} onChange={(event) => updateRating(event.target.value)} />
                   </label>
                   <label className="grid gap-1 text-slate-300">
                     Start date
-                    <span className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-                      <input
-                        type="date"
-                        value={startedAt}
-                        disabled={isPending}
-                        onChange={(event) => updateStartedAt(event.target.value)}
-                        className="rounded-md border border-line bg-surface px-3 py-2 text-white outline-none ring-blue-400 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-                      />
-                      <button type="button" disabled={isPending} onClick={() => updateStartedAt(getTodayInputValue())} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
-                        Today
-                      </button>
-                      <button type="button" disabled={isPending} onClick={() => updateStartedAt("")} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
-                        Clear
-                      </button>
-                    </span>
+                    <DateField disabled={isPending} value={startedAt} onChange={updateStartedAt} />
                   </label>
                   <label className="grid gap-1 text-slate-300">
                     Finish date
-                    <span className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-                      <input
-                        type="date"
-                        value={finishedAt}
-                        disabled={isPending}
-                        onChange={(event) => updateFinishedAt(event.target.value)}
-                        className="rounded-md border border-line bg-surface px-3 py-2 text-white outline-none ring-blue-400 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-                      />
-                      <button type="button" disabled={isPending} onClick={() => updateFinishedAt(getTodayInputValue())} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
-                        Today
-                      </button>
-                      <button type="button" disabled={isPending} onClick={() => updateFinishedAt("")} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
-                        Clear
-                      </button>
-                    </span>
+                    <DateField disabled={isPending} value={finishedAt} onChange={updateFinishedAt} />
                   </label>
                 </div>
               )}
@@ -257,12 +230,6 @@ export function GameCard({ item, readOnly = false }: GameCardProps) {
       ) : null}
     </article>
   );
-}
-
-function getTodayInputValue() {
-  const today = new Date();
-  const timezoneOffset = today.getTimezoneOffset() * 60_000;
-  return new Date(today.getTime() - timezoneOffset).toISOString().slice(0, 10);
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -284,14 +251,5 @@ function ReadOnlyPill({ label, value }: { label: string; value: string }) {
 }
 
 function formatDate(date: string) {
-  if (!date) return "Not set";
-
-  const parsed = new Date(date + "T00:00:00");
-  if (Number.isNaN(parsed.getTime())) return date;
-
-  return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  }).format(parsed);
+  return formatDisplayDate(date) || "Not set";
 }

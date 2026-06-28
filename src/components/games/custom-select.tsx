@@ -15,10 +15,11 @@ type CustomSelectProps = {
   onChange?: (event: CustomSelectChangeEvent) => void;
   onOpenChange?: (isOpen: boolean) => void;
   options: CustomSelectOption[];
+  stableWidth?: boolean;
   value?: string;
 };
 
-export function CustomSelect({ className, defaultValue = "", disabled, onChange, onOpenChange, options, value }: CustomSelectProps) {
+export function CustomSelect({ className, defaultValue = "", disabled, onChange, onOpenChange, options, stableWidth = true, value }: CustomSelectProps) {
   const rootRef = useRef<HTMLSpanElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -107,7 +108,7 @@ export function CustomSelect({ className, defaultValue = "", disabled, onChange,
   ) : null;
 
   return (
-    <span ref={rootRef} className={"relative block " + (className ?? "")} style={{ minWidth: closedMinWidth }}>
+    <span ref={rootRef} className={"relative block min-w-0 " + (className ?? "")} style={stableWidth ? { minWidth: closedMinWidth } : undefined}>
       <button
         type="button"
         disabled={disabled}

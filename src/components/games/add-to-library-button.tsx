@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { DateField } from "@/components/games/date-field";
 import { RatingSelect } from "@/components/games/rating-select";
 import { StatusSelect } from "@/components/games/status-select";
 import type { GameStatus } from "@/lib/statuses";
@@ -72,53 +73,27 @@ export function AddToLibraryButton({ game, libraryState, compact, onSaved }: Add
   }
 
   return (
-    <div className={compact ? "flex flex-wrap items-center gap-2" : "grid gap-3"}>
-      <StatusSelect value={status} onChange={(event) => setStatus(event.target.value as GameStatus)} />
-      <RatingSelect value={rating} onChange={(event) => setRating(event.target.value)} />
+    <div className={compact ? "flex flex-wrap items-center gap-2" : "grid w-full min-w-0 gap-3"}>
+      <StatusSelect stableWidth={compact} value={status} onChange={(event) => setStatus(event.target.value as GameStatus)} />
+      <RatingSelect stableWidth={compact} value={rating} onChange={(event) => setRating(event.target.value)} />
       {!compact ? (
         <div className="grid gap-3">
           <label className="grid gap-1 text-sm text-slate-300">
             Start date
-            <span className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-              <input
-                type="date"
-                value={startedAt}
-                onChange={(event) => setStartedAt(event.target.value)}
-                className="rounded-md border border-line bg-surface px-3 py-2 text-white outline-none ring-blue-400 focus:ring-2"
-              />
-              <button type="button" onClick={() => setStartedAt(getTodayInputValue())} className="rounded-md border border-line px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10">
-                Today
-              </button>
-              <button type="button" onClick={() => setStartedAt("")} className="rounded-md border border-line px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10">
-                Clear
-              </button>
-            </span>
+            <DateField value={startedAt} onChange={setStartedAt} />
           </label>
           <label className="grid gap-1 text-sm text-slate-300">
             Finish date
-            <span className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-              <input
-                type="date"
-                value={finishedAt}
-                onChange={(event) => setFinishedAt(event.target.value)}
-                className="rounded-md border border-line bg-surface px-3 py-2 text-white outline-none ring-blue-400 focus:ring-2"
-              />
-              <button type="button" onClick={() => setFinishedAt(getTodayInputValue())} className="rounded-md border border-line px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10">
-                Today
-              </button>
-              <button type="button" onClick={() => setFinishedAt("")} className="rounded-md border border-line px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10">
-                Clear
-              </button>
-            </span>
+            <DateField value={finishedAt} onChange={setFinishedAt} />
           </label>
           {completionTime ? <p className="text-sm text-slate-300">{completionTime}</p> : null}
         </div>
       ) : null}
-      <button type="button" disabled={isPending} onClick={save} className="rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60">
+      <button type="button" disabled={isPending} onClick={save} className="w-full rounded-md bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60">
         {isPending ? "Saving..." : activeLibraryState ? "Update" : "Add"}
       </button>
       {!compact && activeLibraryState ? (
-        <button type="button" disabled={isPending} onClick={remove} className="rounded-md border border-red-300/40 px-4 py-2 text-sm font-semibold text-red-100 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60">
+        <button type="button" disabled={isPending} onClick={remove} className="w-full rounded-md border border-red-300/40 px-4 py-2 text-sm font-semibold text-red-100 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60">
           Remove from library
         </button>
       ) : null}
@@ -137,10 +112,4 @@ function getCompletionTime(startedAt: string, finishedAt: string) {
   const days = Math.round((finishTime - startTime) / 86_400_000);
   if (days === 0) return "Finished the same day.";
   return `Completed in ${days} ${days === 1 ? "day" : "days"}.`;
-}
-
-function getTodayInputValue() {
-  const today = new Date();
-  const timezoneOffset = today.getTimezoneOffset() * 60_000;
-  return new Date(today.getTime() - timezoneOffset).toISOString().slice(0, 10);
 }

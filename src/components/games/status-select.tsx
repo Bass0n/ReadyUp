@@ -8,6 +8,7 @@ type StatusSelectProps = {
   disabled?: boolean;
   onChange?: (event: { target: { value: string } }) => void;
   onOpenChange?: (isOpen: boolean) => void;
+  stableWidth?: boolean;
   value?: string;
 };
 
