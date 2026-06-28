@@ -14,7 +14,7 @@ type FriendsViewProps = {
 type FriendsOverview = FriendsViewProps;
 
 export function FriendsView({ friends, incomingRequests, outgoingRequests }: FriendsViewProps) {
-  const [email, setEmail] = useState("");
+  const [recipient, setRecipient] = useState("");
   const [overview, setOverview] = useState<FriendsOverview>({ friends, incomingRequests, outgoingRequests });
   const [isPending, startTransition] = useTransition();
 
@@ -51,7 +51,7 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
       const response = await fetch("/api/friends/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ recipient })
       });
 
       const body = await response.json().catch(() => null);
@@ -60,7 +60,7 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
         return;
       }
 
-      setEmail("");
+      setRecipient("");
       toast.success("Friend request sent.");
       await refreshFriends();
     });
@@ -109,10 +109,10 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
         <form onSubmit={sendRequest} className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
           <input
             required
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="friend@example.com"
+            type="text"
+            value={recipient}
+            onChange={(event) => setRecipient(event.target.value)}
+            placeholder="Display name or email"
             className="rounded-md border border-line bg-surface px-3 py-2 text-white outline-none ring-blue-400 placeholder:text-slate-500 focus:ring-2"
           />
           <button disabled={isPending} className="rounded-md bg-blue-500 px-4 py-2 font-semibold text-white hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60">

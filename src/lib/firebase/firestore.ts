@@ -226,6 +226,29 @@ export async function findUserProfileByEmail(email: string): Promise<FriendProfi
   return mapProfile(match.id, match.data() as UserProfileDocument);
 }
 
+export async function findUserProfileByDisplayName(displayName: string): Promise<FriendProfile | null> {
+  const normalizedDisplayName = normalizeDisplayName(displayName);
+  if (!normalizedDisplayName) return null;
+
+  const nameSnapshot = await displayNameRef(displayNameKey(normalizedDisplayName)).get();
+  const userId = nameSnapshot.exists && typeof nameSnapshot.data()?.userId === "string"
+    ? String(nameSnapshot.data()?.userId)
+    : null;
+
+  if (userId) return getFriendProfile(userId);
+
+  const fallbackSnapshot = await adminDb()
+    .collection("users")
+    .where("displayNameLower", "==", displayNameKey(normalizedDisplayName))
+    .limit(1)
+    .get();
+
+  const match = fallbackSnapshot.docs[0];
+  if (!match) return null;
+
+  return mapProfile(match.id, match.data() as UserProfileDocument);
+}
+
 export async function getFriendProfile(userId: string): Promise<FriendProfile | null> {
   const snapshot = await userRef(userId).get();
   if (!snapshot.exists) return null;
