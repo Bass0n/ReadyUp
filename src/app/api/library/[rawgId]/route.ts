@@ -4,12 +4,19 @@ import { removeLibraryGame, updateLibraryGame } from "@/lib/firebase/firestore";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { GAME_STATUSES } from "@/lib/statuses";
 
+const dateFieldSchema = z
+  .union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)])
+  .optional()
+  .transform((value) => (value === "" ? null : value));
+
 const updateSchema = z.object({
   status: z.enum(GAME_STATUSES),
   rating: z
     .union([z.literal(""), z.coerce.number().int().min(1).max(10)])
     .optional()
-    .transform((value) => (value === "" || value === undefined ? null : value))
+    .transform((value) => (value === "" || value === undefined ? null : value)),
+  startedAt: dateFieldSchema,
+  finishedAt: dateFieldSchema
 });
 
 type RouteContext = {
@@ -29,7 +36,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   if (!user) return NextResponse.json({ error: "Please log in first." }, { status: 401 });
 
   try {
-    await updateLibraryGame(user.uid, rawgIdNumber, parsed.data.status, parsed.data.rating);
+    await updateLibraryGame(user.uid, rawgIdNumber, parsed.data.status, parsed.data.rating, {
+      startedAt: parsed.data.startedAt,
+      finishedAt: parsed.data.finishedAt
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not update this game.";

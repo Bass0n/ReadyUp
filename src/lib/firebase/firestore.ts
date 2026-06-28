@@ -9,8 +9,15 @@ type UserGameDocument = {
   rawgId: number;
   status: GameStatus;
   rating: number | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
   notes: string | null;
   game: NormalizedGame;
+};
+
+type LibraryDates = {
+  startedAt?: string | null;
+  finishedAt?: string | null;
 };
 
 function now() {
@@ -59,9 +66,13 @@ export async function upsertGameCache(game: NormalizedGame) {
   );
 }
 
-export async function upsertLibraryGame(userId: string, game: NormalizedGame, status: GameStatus, rating: number | null) {
+export async function upsertLibraryGame(userId: string, game: NormalizedGame, status: GameStatus, rating: number | null, dates: LibraryDates = {}) {
   const db = adminDb();
   const batch = db.batch();
+  const dateFields: LibraryDates = {};
+
+  if (dates.startedAt !== undefined) dateFields.startedAt = dates.startedAt;
+  if (dates.finishedAt !== undefined) dateFields.finishedAt = dates.finishedAt;
 
   batch.set(gameCacheRef(game.rawgId), { ...game, updatedAt: now(), createdAt: now() }, { merge: true });
   batch.set(
@@ -70,6 +81,7 @@ export async function upsertLibraryGame(userId: string, game: NormalizedGame, st
       rawgId: game.rawgId,
       status,
       rating,
+      ...dateFields,
       notes: null,
       game,
       updatedAt: now(),
@@ -88,6 +100,8 @@ function mapLibraryDoc(doc: QueryDocumentSnapshot): LibraryGame {
     rawgId: data.rawgId,
     status: data.status,
     rating: data.rating ?? null,
+    startedAt: data.startedAt ?? null,
+    finishedAt: data.finishedAt ?? null,
     notes: data.notes ?? null,
     game: data.game
   };
@@ -110,7 +124,9 @@ export async function getLibraryState(userId: string, rawgId: number): Promise<L
   const data = snapshot.data() as UserGameDocument;
   return {
     status: data.status,
-    rating: data.rating ?? null
+    rating: data.rating ?? null,
+    startedAt: data.startedAt ?? null,
+    finishedAt: data.finishedAt ?? null
   };
 }
 
@@ -122,14 +138,19 @@ export async function getLibraryStates(userId: string, rawgIds: number[]) {
   docs.forEach((doc) => {
     if (!doc.exists) return;
     const data = doc.data() as UserGameDocument;
-    states.set(data.rawgId, { status: data.status, rating: data.rating ?? null });
+    states.set(data.rawgId, { status: data.status, rating: data.rating ?? null, startedAt: data.startedAt ?? null, finishedAt: data.finishedAt ?? null });
   });
 
   return states;
 }
 
-export async function updateLibraryGame(userId: string, rawgId: number, status: GameStatus, rating: number | null) {
-  await userGameRef(userId, rawgId).update({ status, rating, updatedAt: now() });
+export async function updateLibraryGame(userId: string, rawgId: number, status: GameStatus, rating: number | null, dates: LibraryDates = {}) {
+  const dateFields: LibraryDates = {};
+
+  if (dates.startedAt !== undefined) dateFields.startedAt = dates.startedAt;
+  if (dates.finishedAt !== undefined) dateFields.finishedAt = dates.finishedAt;
+
+  await userGameRef(userId, rawgId).update({ status, rating, ...dateFields, updatedAt: now() });
 }
 
 export async function removeLibraryGame(userId: string, rawgId: number) {

@@ -19,6 +19,8 @@ export type LibraryGame = {
   rawgId: number;
   status: GameStatus;
   rating: number | null;
+  startedAt: string | null;
+  finishedAt: string | null;
   notes: string | null;
   game: NormalizedGame;
 };
@@ -26,4 +28,6 @@ export type LibraryGame = {
 export type LibraryState = {
   status: GameStatus;
   rating: number | null;
+  startedAt: string | null;
+  finishedAt: string | null;
 } | null;

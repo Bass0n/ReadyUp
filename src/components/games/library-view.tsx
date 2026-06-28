@@ -7,7 +7,7 @@ import { GAME_STATUSES, type GameStatus } from "@/lib/statuses";
 import type { LibraryGame } from "@/lib/types";
 
 type LibraryFilter = "All" | GameStatus;
-type LibrarySort = "title" | "rating-desc" | "rating-asc";
+type LibrarySort = "title" | "rating-desc" | "rating-asc" | "started-desc" | "finished-desc";
 
 type LibraryViewProps = {
   games: LibraryGame[];
@@ -21,9 +21,26 @@ function normalizeTitle(value: string) {
   return value.toLowerCase().trim();
 }
 
+function compareDatesNewestFirst(aDate: string | null, bDate: string | null) {
+  if (!aDate && !bDate) return 0;
+  if (!aDate) return 1;
+  if (!bDate) return -1;
+
+  return Date.parse(bDate) - Date.parse(aDate);
+}
+
 function sortGames(games: LibraryGame[], sort: LibrarySort) {
   return [...games].sort((a, b) => {
     if (sort === "title") {
+      return a.game.name.localeCompare(b.game.name, undefined, { sensitivity: "base" });
+    }
+
+    if (sort === "started-desc" || sort === "finished-desc") {
+      const dateDifference = sort === "started-desc"
+        ? compareDatesNewestFirst(a.startedAt, b.startedAt)
+        : compareDatesNewestFirst(a.finishedAt, b.finishedAt);
+
+      if (dateDifference !== 0) return dateDifference;
       return a.game.name.localeCompare(b.game.name, undefined, { sensitivity: "base" });
     }
 
@@ -121,6 +138,8 @@ export function LibraryView({ games }: LibraryViewProps) {
             <option value="title">Title A-Z</option>
             <option value="rating-desc">Rating high to low</option>
             <option value="rating-asc">Rating low to high</option>
+            <option value="started-desc">Start date</option>
+            <option value="finished-desc">Finish date</option>
           </select>
         </label>
       </div>

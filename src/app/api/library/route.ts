@@ -15,7 +15,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const game = await getIgdbGame(parsed.data.slug);
-    await upsertLibraryGame(user.uid, game, parsed.data.status, parsed.data.rating);
+    await upsertLibraryGame(user.uid, game, parsed.data.status, parsed.data.rating, {
+      startedAt: parsed.data.startedAt,
+      finishedAt: parsed.data.finishedAt
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not save game.";
