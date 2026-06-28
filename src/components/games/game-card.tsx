@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { GameImage } from "@/components/games/game-image";
@@ -14,6 +15,7 @@ type GameCardProps = {
 };
 
 export function GameCard({ item }: GameCardProps) {
+  const router = useRouter();
   const [visible, setVisible] = useState(true);
   const [status, setStatus] = useState<GameStatus>(item.status);
   const [rating, setRating] = useState(item.rating ? String(item.rating) : "");
@@ -35,6 +37,7 @@ export function GameCard({ item }: GameCardProps) {
       }
 
       toast.success("Game updated.");
+      router.refresh();
     });
   }
 
@@ -49,6 +52,7 @@ export function GameCard({ item }: GameCardProps) {
 
       setVisible(false);
       toast.success("Game removed.");
+      router.refresh();
     });
   }
 

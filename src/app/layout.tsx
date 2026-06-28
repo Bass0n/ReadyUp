@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import Link from "next/link";
 import { Toaster } from "sonner";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HeaderGameSearch } from "@/components/games/header-game-search";
+import { ReadyUpLink } from "@/components/navigation/readyup-link";
 import { getCurrentUser } from "@/lib/firebase/session";
 import "./globals.css";
 
@@ -19,15 +21,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en">
       <body className={inter.className}>
-        <header className="border-b border-line/80 bg-surface/70 backdrop-blur">
-          <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-            <Link href="/" className="text-xl font-semibold tracking-tight">
-              ReadyUp
-            </Link>
-            <div className="flex items-center gap-3 text-sm text-slate-200">
-              <Link className="rounded-md px-3 py-2 hover:bg-white/10" href="/library">
-                Library
-              </Link>
+        <header className="sticky top-0 z-[1000] border-b border-line/80 bg-surface/95 backdrop-blur">
+          <nav className="mx-auto grid max-w-6xl grid-cols-[minmax(130px,1fr)_minmax(260px,560px)_minmax(180px,1fr)] items-center gap-6 px-4 py-4 max-md:grid-cols-1 max-md:gap-3">
+            <ReadyUpLink signedIn={Boolean(user)} />
+            {user ? <HeaderGameSearch /> : <div />}
+            <div className="flex items-center justify-end gap-3 text-sm text-slate-200 max-md:justify-start">
               {user ? (
                 <>
                   <Link className="rounded-md px-3 py-2 hover:bg-white/10" href="/profile">

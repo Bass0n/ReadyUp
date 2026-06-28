@@ -3,7 +3,8 @@ export const GAME_STATUSES = [
   "Finished",
   "Completed",
   "On Hold",
-  "Dropped"
+  "Dropped",
+  "Wishlist"
 ] as const;
 
 export type GameStatus = (typeof GAME_STATUSES)[number];

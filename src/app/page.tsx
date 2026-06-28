@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Gamepad2, ListChecks, Search } from "lucide-react";
 import { getCurrentUser } from "@/lib/firebase/session";
 
 export default async function Home() {
   const user = await getCurrentUser();
+  if (user) redirect("/library");
 
   return (
     <main className="mx-auto grid min-h-[calc(100vh-73px)] max-w-6xl items-center gap-10 px-4 py-14 lg:grid-cols-[1.05fr_0.95fr]">
@@ -19,8 +21,8 @@ export default async function Home() {
           on hold, or dropped.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href={user ? "/library" : "/login"} className="rounded-md bg-blue-500 px-5 py-3 font-semibold text-white hover:bg-blue-400">
-            {user ? "Open library" : "Start tracking"}
+          <Link href="/login" className="rounded-md bg-blue-500 px-5 py-3 font-semibold text-white hover:bg-blue-400">
+            Start tracking
           </Link>
           <Link href="/register" className="rounded-md border border-line px-5 py-3 font-semibold text-slate-100 hover:bg-white/10">
             Create account

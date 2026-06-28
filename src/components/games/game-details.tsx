@@ -1,5 +1,5 @@
 import { AddToLibraryButton } from "@/components/games/add-to-library-button";
-import { GameImage } from "@/components/games/game-image";
+import { GameBannerPreview } from "@/components/games/game-banner-preview";
 import type { LibraryState, NormalizedGame } from "@/lib/types";
 
 type GameDetailsProps = {
@@ -10,14 +10,11 @@ type GameDetailsProps = {
 export function GameDetails({ game, libraryState }: GameDetailsProps) {
   return (
     <article className="grid gap-8">
-      <div className="relative min-h-[260px] overflow-hidden rounded-lg border border-line bg-surface sm:min-h-[420px]">
-        <GameImage src={game.backgroundImage} alt={game.name} priority />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/20 to-transparent" />
-        <div className="absolute bottom-0 max-w-4xl p-6 sm:p-8">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">{game.name}</h1>
-          <p className="mt-3 text-sm text-slate-200">{[game.released, game.platforms.join(", ")].filter(Boolean).join(" - ")}</p>
-        </div>
-      </div>
+      <GameBannerPreview
+        src={game.backgroundImage}
+        alt={game.name}
+        subtitle={[game.released, game.platforms.join(", ")].filter(Boolean).join(" - ")}
+      />
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="rounded-lg border border-line bg-panel p-6">
           <h2 className="text-xl font-semibold">Details</h2>

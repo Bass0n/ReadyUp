@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { RatingSelect } from "@/components/games/rating-select";
@@ -15,6 +16,7 @@ type AddToLibraryButtonProps = {
 };
 
 export function AddToLibraryButton({ game, libraryState, compact, onSaved }: AddToLibraryButtonProps) {
+  const router = useRouter();
   const [status, setStatus] = useState<GameStatus>(libraryState?.status ?? "Playing");
   const [rating, setRating] = useState<string>(libraryState?.rating ? String(libraryState.rating) : "");
   const [isPending, startTransition] = useTransition();
@@ -36,6 +38,7 @@ export function AddToLibraryButton({ game, libraryState, compact, onSaved }: Add
       const nextState = { status, rating: rating ? Number(rating) : null };
       toast.success(libraryState ? "Library item updated." : "Game added to your library.");
       onSaved?.(nextState);
+      router.refresh();
     });
   }
 

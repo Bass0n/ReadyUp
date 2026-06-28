@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { SearchResultItem } from "@/components/games/search-result-item";
+import { CLEAR_LIBRARY_SEARCH_EVENT } from "@/lib/events";
 import type { LibraryState, NormalizedGame } from "@/lib/types";
 
 type SearchResult = {
@@ -16,6 +17,17 @@ export function GameSearchBar() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const trimmed = useMemo(() => query.trim(), [query]);
+
+  useEffect(() => {
+    function clearSearch() {
+      setQuery("");
+      setResults([]);
+      setError(null);
+    }
+
+    window.addEventListener(CLEAR_LIBRARY_SEARCH_EVENT, clearSearch);
+    return () => window.removeEventListener(CLEAR_LIBRARY_SEARCH_EVENT, clearSearch);
+  }, []);
 
   useEffect(() => {
     if (trimmed.length < 2) {

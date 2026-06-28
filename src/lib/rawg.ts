@@ -25,6 +25,8 @@ type RawgGame = {
   genres?: RawgGenre[] | null;
   metacritic?: number | null;
   rating?: number | null;
+  added?: number | null;
+  ratings_count?: number | null;
 };
 
 type RawgSearchResponse = {
@@ -38,7 +40,7 @@ function rawgKey() {
 }
 
 async function rawgFetch<T>(path: string, params: Record<string, string> = {}) {
-  const url = new URL(`${RAWG_BASE_URL}${path}`);
+  const url = new URL(RAWG_BASE_URL + path);
   url.searchParams.set("key", rawgKey());
   Object.entries(params).forEach(([key, value]) => {
     if (value) url.searchParams.set(key, value);
@@ -46,8 +48,54 @@ async function rawgFetch<T>(path: string, params: Record<string, string> = {}) {
 
   const response = await fetch(url, { next: { revalidate: 60 * 60 } });
 
-  if (!response.ok) throw new Error(`RAWG request failed with ${response.status}.`);
+  if (!response.ok) throw new Error("RAWG request failed with " + response.status + ".");
   return (await response.json()) as T;
+}
+
+function normalizeSearchText(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+type SearchRank = {
+  matchType: number;
+  completionDistance: number;
+};
+
+function relevanceRank(game: RawgGame, query: string): SearchRank {
+  const normalizedQuery = normalizeSearchText(query);
+  const normalizedName = normalizeSearchText(game.name);
+  const normalizedSlug = normalizeSearchText(game.slug.replace(/-/g, " "));
+
+  if (!normalizedQuery) return { matchType: 5, completionDistance: Number.MAX_SAFE_INTEGER };
+  if (normalizedName === normalizedQuery) return { matchType: 0, completionDistance: 0 };
+  if (normalizedName.startsWith(normalizedQuery)) {
+    return { matchType: 1, completionDistance: normalizedName.length - normalizedQuery.length };
+  }
+  if (normalizedName.includes(normalizedQuery)) {
+    return { matchType: 2, completionDistance: normalizedName.length - normalizedQuery.length };
+  }
+  if (normalizedSlug.includes(normalizedQuery)) {
+    return { matchType: 3, completionDistance: normalizedSlug.length - normalizedQuery.length };
+  }
+  return { matchType: 4, completionDistance: Number.MAX_SAFE_INTEGER };
+}
+
+function popularityScore(game: RawgGame) {
+  return game.added ?? game.ratings_count ?? 0;
+}
+
+function sortSearchResults(games: RawgGame[], query: string) {
+  return [...games].sort((a, b) => {
+    const aRank = relevanceRank(a, query);
+    const bRank = relevanceRank(b, query);
+    const matchDifference = aRank.matchType - bRank.matchType;
+    if (matchDifference !== 0) return matchDifference;
+
+    const distanceDifference = aRank.completionDistance - bRank.completionDistance;
+    if (distanceDifference !== 0) return distanceDifference;
+
+    return popularityScore(b) - popularityScore(a);
+  });
 }
 
 export function normalizeRawgGame(game: RawgGame): NormalizedGame {
@@ -71,13 +119,13 @@ export function normalizeRawgGame(game: RawgGame): NormalizedGame {
 export async function searchRawgGames(query: string) {
   const data = await rawgFetch<RawgSearchResponse>("/games", {
     search: query,
-    page_size: "12"
+    page_size: "40"
   });
 
-  return (data.results ?? []).map(normalizeRawgGame);
+  return sortSearchResults(data.results ?? [], query).slice(0, 12).map(normalizeRawgGame);
 }
 
 export async function getRawgGame(slugOrId: string) {
-  const data = await rawgFetch<RawgGame>(`/games/${encodeURIComponent(slugOrId)}`);
+  const data = await rawgFetch<RawgGame>("/games/" + encodeURIComponent(slugOrId));
   return normalizeRawgGame(data);
 }

@@ -7,7 +7,7 @@ service cloud.firestore {
     }
 
     function validStatus(status) {
-      return status in ['Playing', 'Finished', 'Completed', 'On Hold', 'Dropped'];
+      return status in ['Playing', 'Finished', 'Completed', 'On Hold', 'Dropped', 'Wishlist'];
     }
 
     function validRating(rating) {

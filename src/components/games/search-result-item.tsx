@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { AddToLibraryButton } from "@/components/games/add-to-library-button";
 import { GameImage } from "@/components/games/game-image";
+import { CLEAR_LIBRARY_SEARCH_EVENT } from "@/lib/events";
 import type { LibraryState, NormalizedGame } from "@/lib/types";
 import { releaseYear } from "@/lib/utils";
 
@@ -14,16 +15,28 @@ type SearchResultItemProps = {
 
 export function SearchResultItem({ game, libraryState }: SearchResultItemProps) {
   const [savedState, setSavedState] = useState(libraryState);
+  const gameHref = "/games/" + game.slug;
+
+  function clearSearchBeforeNavigation() {
+    window.dispatchEvent(new Event(CLEAR_LIBRARY_SEARCH_EVENT));
+  }
 
   return (
     <article className="grid gap-4 rounded-lg border border-line bg-panel p-3 sm:grid-cols-[140px_1fr]">
-      <div className="relative aspect-video overflow-hidden rounded-md bg-surface">
+      <Link
+        href={gameHref}
+        onClick={clearSearchBeforeNavigation}
+        className="relative aspect-video overflow-hidden rounded-md bg-surface focus:outline-none focus:ring-2 focus:ring-blue-400"
+        aria-label={"View details for " + game.name}
+      >
         <GameImage src={game.backgroundImage} alt={game.name} />
-      </div>
+      </Link>
       <div className="grid gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold text-white">{game.name}</h3>
+            <Link href={gameHref} onClick={clearSearchBeforeNavigation} className="font-semibold text-white hover:text-blue-200">
+              {game.name}
+            </Link>
             {savedState ? (
               <span className="rounded-full bg-emerald-500/15 px-2 py-1 text-xs text-emerald-100">
                 {savedState.status}
@@ -36,9 +49,6 @@ export function SearchResultItem({ game, libraryState }: SearchResultItemProps) 
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link className="rounded-md border border-line px-3 py-2 text-sm font-medium text-slate-100 hover:bg-white/10" href={`/games/${game.slug}`}>
-            View details
-          </Link>
           <AddToLibraryButton game={game} libraryState={savedState} compact onSaved={setSavedState} />
         </div>
       </div>
