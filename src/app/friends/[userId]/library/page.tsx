@@ -25,7 +25,7 @@ export default async function FriendLibraryPage({ params }: FriendLibraryPagePro
   if (!friend) notFound();
 
   return (
-    <main className="mx-auto grid max-w-6xl gap-8 px-4 py-8">
+    <main className="mx-auto grid max-w-[100rem] gap-8 px-4 py-8">
       <section>
         <h1 className="text-3xl font-bold tracking-tight">{friend.displayName || friend.email || "Friend"}&apos;s library</h1>
         <p className="mt-2 text-slate-300">Read-only preview. You can view their games, but only they can edit them.</p>

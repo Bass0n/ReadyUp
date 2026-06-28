@@ -19,7 +19,7 @@ export function LibraryGrid({ games, readOnly = false }: LibraryGridProps) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 min-[1600px]:grid-cols-7">
       {games.map((item) => (
         <GameCard key={item.id} item={item} readOnly={readOnly} />
       ))}

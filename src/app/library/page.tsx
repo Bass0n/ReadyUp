@@ -10,7 +10,7 @@ export default async function LibraryPage() {
   const games = await getUserLibrary();
 
   return (
-    <main className="mx-auto grid max-w-6xl gap-8 px-4 py-8">
+    <main className="mx-auto grid max-w-[100rem] gap-8 px-4 py-8">
       <section>
         <h1 className="text-3xl font-bold tracking-tight">Your library</h1>
         <p className="mt-2 text-slate-300">Use the search bar above to add games and keep progress up to date.</p>
