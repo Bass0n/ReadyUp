@@ -11,6 +11,7 @@ type LibrarySort = "title" | "rating-desc" | "rating-asc" | "started-desc" | "fi
 
 type LibraryViewProps = {
   games: LibraryGame[];
+  readOnly?: boolean;
 };
 
 function filterLabel(filter: LibraryFilter) {
@@ -53,7 +54,7 @@ function sortGames(games: LibraryGame[], sort: LibrarySort) {
   });
 }
 
-export function LibraryView({ games }: LibraryViewProps) {
+export function LibraryView({ games, readOnly = false }: LibraryViewProps) {
   const [activeFilter, setActiveFilter] = useState<LibraryFilter>("All");
   const [activeSort, setActiveSort] = useState<LibrarySort>("title");
   const [libraryQuery, setLibraryQuery] = useState("");
@@ -147,7 +148,7 @@ export function LibraryView({ games }: LibraryViewProps) {
       {visibleGames.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {visibleGames.map((item) => (
-            <GameCard key={item.id} item={item} />
+            <GameCard key={item.id} item={item} readOnly={readOnly} />
           ))}
         </div>
       ) : (

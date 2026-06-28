@@ -3,7 +3,7 @@ import "server-only";
 import { FieldValue, type DocumentSnapshot, type QueryDocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
 import type { GameStatus } from "@/lib/statuses";
-import type { LibraryGame, LibraryState, NormalizedGame } from "@/lib/types";
+import type { FriendProfile, FriendRequest, LibraryGame, LibraryState, NormalizedGame } from "@/lib/types";
 
 type UserGameDocument = {
   rawgId: number;
@@ -20,6 +20,19 @@ type LibraryDates = {
   finishedAt?: string | null;
 };
 
+type UserProfileDocument = {
+  email?: string | null;
+  emailLower?: string | null;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+};
+
+type FriendRequestDocument = {
+  from: FriendProfile;
+  to: FriendProfile;
+  status: "pending" | "accepted" | "denied";
+};
+
 function now() {
   return FieldValue.serverTimestamp();
 }
@@ -32,6 +45,41 @@ export function userGameRef(userId: string, rawgId: number) {
   return adminDb().collection("users").doc(userId).collection("games").doc(String(rawgId));
 }
 
+function userRef(userId: string) {
+  return adminDb().collection("users").doc(userId);
+}
+
+function friendRef(userId: string, friendId: string) {
+  return userRef(userId).collection("friends").doc(friendId);
+}
+
+function friendRequestRef(requestId: string) {
+  return adminDb().collection("friend_requests").doc(requestId);
+}
+
+function requestIdForUsers(fromUserId: string, toUserId: string) {
+  return `${fromUserId}_${toUserId}`;
+}
+
+function mapProfile(userId: string, data: UserProfileDocument): FriendProfile {
+  return {
+    userId,
+    displayName: data.displayName ?? null,
+    email: data.email ?? null,
+    avatarUrl: data.avatarUrl ?? null
+  };
+}
+
+function mapFriendRequestDoc(doc: QueryDocumentSnapshot): FriendRequest {
+  const data = doc.data() as FriendRequestDocument;
+  return {
+    id: doc.id,
+    from: data.from,
+    to: data.to,
+    status: data.status
+  };
+}
+
 export async function upsertUserProfile(user: {
   uid: string;
   email?: string | null;
@@ -41,6 +89,7 @@ export async function upsertUserProfile(user: {
   await adminDb().collection("users").doc(user.uid).set(
     {
       email: user.email ?? null,
+      emailLower: user.email?.toLowerCase() ?? null,
       displayName: user.displayName ?? null,
       avatarUrl: user.photoURL ?? null,
       updatedAt: now(),
@@ -51,8 +100,99 @@ export async function upsertUserProfile(user: {
 }
 
 export async function getUserProfile(userId: string) {
-  const snapshot = await adminDb().collection("users").doc(userId).get();
+  const snapshot = await userRef(userId).get();
   return snapshot.exists ? snapshot.data() : null;
+}
+
+export async function findUserProfileByEmail(email: string): Promise<FriendProfile | null> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return null;
+
+  const emailLowerSnapshot = await adminDb()
+    .collection("users")
+    .where("emailLower", "==", normalizedEmail)
+    .limit(1)
+    .get();
+
+  const fallbackSnapshot = emailLowerSnapshot.empty
+    ? await adminDb().collection("users").where("email", "==", email.trim()).limit(1).get()
+    : null;
+
+  const match = emailLowerSnapshot.docs[0] ?? fallbackSnapshot?.docs[0];
+  if (!match) return null;
+
+  return mapProfile(match.id, match.data() as UserProfileDocument);
+}
+
+export async function getFriendProfile(userId: string): Promise<FriendProfile | null> {
+  const snapshot = await userRef(userId).get();
+  if (!snapshot.exists) return null;
+
+  return mapProfile(snapshot.id, snapshot.data() as UserProfileDocument);
+}
+
+export async function areFriends(userId: string, friendId: string) {
+  const snapshot = await friendRef(userId, friendId).get();
+  return snapshot.exists;
+}
+
+export async function sendFriendRequest(from: FriendProfile, to: FriendProfile) {
+  const existingFriend = await friendRef(from.userId, to.userId).get();
+  if (existingFriend.exists) throw new Error("You are already friends with this user.");
+
+  const outgoingRequest = await friendRequestRef(requestIdForUsers(from.userId, to.userId)).get();
+  if (outgoingRequest.exists && outgoingRequest.data()?.status === "pending") {
+    throw new Error("You already sent this user a friend request.");
+  }
+
+  const incomingRequest = await friendRequestRef(requestIdForUsers(to.userId, from.userId)).get();
+  if (incomingRequest.exists && incomingRequest.data()?.status === "pending") {
+    throw new Error("This user already sent you a friend request.");
+  }
+
+  await friendRequestRef(requestIdForUsers(from.userId, to.userId)).set({
+    from,
+    to,
+    status: "pending",
+    updatedAt: now(),
+    createdAt: now()
+  });
+}
+
+export async function getFriendsOverview(userId: string) {
+  const [friendsSnapshot, incomingSnapshot, outgoingSnapshot] = await Promise.all([
+    userRef(userId).collection("friends").orderBy("displayName").get(),
+    adminDb().collection("friend_requests").where("to.userId", "==", userId).get(),
+    adminDb().collection("friend_requests").where("from.userId", "==", userId).get()
+  ]);
+
+  return {
+    friends: friendsSnapshot.docs.map((doc) => mapProfile(doc.id, doc.data() as UserProfileDocument)),
+    incomingRequests: incomingSnapshot.docs.map(mapFriendRequestDoc).filter((request) => request.status === "pending"),
+    outgoingRequests: outgoingSnapshot.docs.map(mapFriendRequestDoc).filter((request) => request.status === "pending")
+  };
+}
+
+export async function respondToFriendRequest(userId: string, requestId: string, action: "accept" | "deny") {
+  const requestSnapshot = await friendRequestRef(requestId).get();
+  if (!requestSnapshot.exists) throw new Error("Friend request not found.");
+
+  const request = requestSnapshot.data() as FriendRequestDocument;
+  if (request.to.userId !== userId) throw new Error("You cannot respond to this friend request.");
+  if (request.status !== "pending") throw new Error("This friend request is no longer pending.");
+
+  if (action === "deny") {
+    await requestSnapshot.ref.update({ status: "denied", updatedAt: now() });
+    return;
+  }
+
+  const batch = adminDb().batch();
+
+  batch.set(friendRef(request.from.userId, request.to.userId), { ...request.to, updatedAt: now(), createdAt: now() });
+  batch.set(friendRef(request.to.userId, request.from.userId), { ...request.from, updatedAt: now(), createdAt: now() });
+  batch.update(requestSnapshot.ref, { status: "accepted", updatedAt: now() });
+
+  await batch.commit();
 }
 
 export async function upsertGameCache(game: NormalizedGame) {

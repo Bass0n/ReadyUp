@@ -28,6 +28,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <div className="flex items-center justify-end gap-3 text-sm text-slate-200 max-md:justify-start">
               {user ? (
                 <>
+                  <Link className="rounded-md px-3 py-2 hover:bg-white/10" href="/friends">
+                    Friends
+                  </Link>
                   <Link className="rounded-md px-3 py-2 hover:bg-white/10" href="/profile">
                     Profile
                   </Link>

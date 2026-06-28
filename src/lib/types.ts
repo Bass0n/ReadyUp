@@ -31,3 +31,17 @@ export type LibraryState = {
   startedAt: string | null;
   finishedAt: string | null;
 } | null;
+
+export type FriendProfile = {
+  userId: string;
+  displayName: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+};
+
+export type FriendRequest = {
+  id: string;
+  from: FriendProfile;
+  to: FriendProfile;
+  status: "pending" | "accepted" | "denied";
+};

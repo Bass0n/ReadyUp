@@ -3,9 +3,10 @@ import type { LibraryGame } from "@/lib/types";
 
 type LibraryGridProps = {
   games: LibraryGame[];
+  readOnly?: boolean;
 };
 
-export function LibraryGrid({ games }: LibraryGridProps) {
+export function LibraryGrid({ games, readOnly = false }: LibraryGridProps) {
   if (!games.length) {
     return (
       <div className="rounded-lg border border-dashed border-line bg-panel/60 p-8 text-center">
@@ -20,7 +21,7 @@ export function LibraryGrid({ games }: LibraryGridProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
       {games.map((item) => (
-        <GameCard key={item.id} item={item} />
+        <GameCard key={item.id} item={item} readOnly={readOnly} />
       ))}
     </div>
   );

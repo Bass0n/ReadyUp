@@ -13,9 +13,10 @@ import type { LibraryGame } from "@/lib/types";
 
 type GameCardProps = {
   item: LibraryGame;
+  readOnly?: boolean;
 };
 
-export function GameCard({ item }: GameCardProps) {
+export function GameCard({ item, readOnly = false }: GameCardProps) {
   const router = useRouter();
   const [visible, setVisible] = useState(true);
   const [status, setStatus] = useState<GameStatus>(item.status);
@@ -141,24 +142,28 @@ export function GameCard({ item }: GameCardProps) {
         >
           <Search className="h-4 w-4" aria-hidden="true" />
         </button>
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={remove}
-          aria-label={`Remove ${item.game.name} from your library`}
-          title="Remove from library"
-          className="pointer-events-none absolute right-2 top-2 z-20 grid h-8 w-8 place-items-center rounded-md border border-red-300/40 bg-slate-950/80 text-red-100 opacity-0 shadow-sm backdrop-blur transition-opacity duration-150 ease-out hover:bg-red-500/25 focus-visible:pointer-events-auto focus-visible:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100 disabled:opacity-60"
-        >
-          <Trash2 className="h-4 w-4" aria-hidden="true" />
-        </button>
+        {!readOnly ? (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={remove}
+            aria-label={`Remove ${item.game.name} from your library`}
+            title="Remove from library"
+            className="pointer-events-none absolute right-2 top-2 z-20 grid h-8 w-8 place-items-center rounded-md border border-red-300/40 bg-slate-950/80 text-red-100 opacity-0 shadow-sm backdrop-blur transition-opacity duration-150 ease-out hover:bg-red-500/25 focus-visible:pointer-events-auto focus-visible:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100 disabled:opacity-60"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+          </button>
+        ) : null}
         <div className={"pointer-events-none absolute inset-x-0 bottom-0 z-10 translate-y-4 rounded-b-lg bg-surface p-4 opacity-0 transition duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 " + (isControlsOpen ? "pointer-events-auto translate-y-0 opacity-100" : "")}>
           <Link href={`/games/${item.game.slug}`} className="block font-semibold text-white hover:text-blue-200">
             {item.game.name}
           </Link>
-          <div className="mt-3 grid gap-2">
-            <StatusSelect disabled={isPending} value={status} onOpenChange={setIsControlsOpen} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
-            <RatingSelect disabled={isPending} value={rating} onOpenChange={setIsControlsOpen} onChange={(event) => updateRating(event.target.value)} />
-          </div>
+          {!readOnly ? (
+            <div className="mt-3 grid gap-2">
+              <StatusSelect disabled={isPending} value={status} onOpenChange={setIsControlsOpen} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
+              <RatingSelect disabled={isPending} value={rating} onOpenChange={setIsControlsOpen} onChange={(event) => updateRating(event.target.value)} />
+            </div>
+          ) : null}
         </div>
       </div>
       {isDetailsOpen ? (
@@ -186,52 +191,61 @@ export function GameCard({ item }: GameCardProps) {
             </div>
             <div className="pr-10">
               <h2 className="text-2xl font-bold text-white">{item.game.name}</h2>
-              <div className="mt-5 grid gap-4 text-sm">
-                <label className="grid gap-1 text-slate-300">
-                  Status
-                  <StatusSelect disabled={isPending} value={status} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
-                </label>
-                <label className="grid gap-1 text-slate-300">
-                  Rating
-                  <RatingSelect disabled={isPending} value={rating} onChange={(event) => updateRating(event.target.value)} />
-                </label>
-                <label className="grid gap-1 text-slate-300">
-                  Start date
-                  <span className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-                    <input
-                      type="date"
-                      value={startedAt}
-                      disabled={isPending}
-                      onChange={(event) => updateStartedAt(event.target.value)}
-                      className="rounded-md border border-line bg-surface px-3 py-2 text-white outline-none ring-blue-400 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-                    />
-                    <button type="button" disabled={isPending} onClick={() => updateStartedAt(getTodayInputValue())} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
-                      Today
-                    </button>
-                    <button type="button" disabled={isPending} onClick={() => updateStartedAt("")} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
-                      Clear
-                    </button>
-                  </span>
-                </label>
-                <label className="grid gap-1 text-slate-300">
-                  Finish date
-                  <span className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-                    <input
-                      type="date"
-                      value={finishedAt}
-                      disabled={isPending}
-                      onChange={(event) => updateFinishedAt(event.target.value)}
-                      className="rounded-md border border-line bg-surface px-3 py-2 text-white outline-none ring-blue-400 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-                    />
-                    <button type="button" disabled={isPending} onClick={() => updateFinishedAt(getTodayInputValue())} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
-                      Today
-                    </button>
-                    <button type="button" disabled={isPending} onClick={() => updateFinishedAt("")} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
-                      Clear
-                    </button>
-                  </span>
-                </label>
-              </div>
+              {readOnly ? (
+                <dl className="mt-5 grid gap-4 text-sm">
+                  <DetailRow label="Status" value={status} />
+                  <DetailRow label="Rating" value={rating || "No rating"} />
+                  <DetailRow label="Start date" value={formatDate(startedAt)} />
+                  <DetailRow label="Finish date" value={formatDate(finishedAt)} />
+                </dl>
+              ) : (
+                <div className="mt-5 grid gap-4 text-sm">
+                  <label className="grid gap-1 text-slate-300">
+                    Status
+                    <StatusSelect disabled={isPending} value={status} onChange={(event) => updateStatus(event.target.value as GameStatus)} />
+                  </label>
+                  <label className="grid gap-1 text-slate-300">
+                    Rating
+                    <RatingSelect disabled={isPending} value={rating} onChange={(event) => updateRating(event.target.value)} />
+                  </label>
+                  <label className="grid gap-1 text-slate-300">
+                    Start date
+                    <span className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+                      <input
+                        type="date"
+                        value={startedAt}
+                        disabled={isPending}
+                        onChange={(event) => updateStartedAt(event.target.value)}
+                        className="rounded-md border border-line bg-surface px-3 py-2 text-white outline-none ring-blue-400 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+                      />
+                      <button type="button" disabled={isPending} onClick={() => updateStartedAt(getTodayInputValue())} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
+                        Today
+                      </button>
+                      <button type="button" disabled={isPending} onClick={() => updateStartedAt("")} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
+                        Clear
+                      </button>
+                    </span>
+                  </label>
+                  <label className="grid gap-1 text-slate-300">
+                    Finish date
+                    <span className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+                      <input
+                        type="date"
+                        value={finishedAt}
+                        disabled={isPending}
+                        onChange={(event) => updateFinishedAt(event.target.value)}
+                        className="rounded-md border border-line bg-surface px-3 py-2 text-white outline-none ring-blue-400 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+                      />
+                      <button type="button" disabled={isPending} onClick={() => updateFinishedAt(getTodayInputValue())} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
+                        Today
+                      </button>
+                      <button type="button" disabled={isPending} onClick={() => updateFinishedAt("")} className="rounded-md border border-line px-3 py-2 font-semibold text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
+                        Clear
+                      </button>
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -244,4 +258,26 @@ function getTodayInputValue() {
   const today = new Date();
   const timezoneOffset = today.getTimezoneOffset() * 60_000;
   return new Date(today.getTime() - timezoneOffset).toISOString().slice(0, 10);
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-slate-400">{label}</dt>
+      <dd className="mt-1 text-base text-slate-100">{value}</dd>
+    </div>
+  );
+}
+
+function formatDate(date: string) {
+  if (!date) return "Not set";
+
+  const parsed = new Date(date + "T00:00:00");
+  if (Number.isNaN(parsed.getTime())) return date;
+
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  }).format(parsed);
 }
