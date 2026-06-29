@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { LibraryView } from "@/components/games/library-view";
+import { FriendLibraryView } from "@/components/games/friend-library-view";
 import { UserAvatar } from "@/components/profile/user-avatar";
 import { areFriends, getFriendProfile, getUserLibrary } from "@/lib/firebase/firestore";
 import { getCurrentUser } from "@/lib/firebase/session";
@@ -34,7 +34,7 @@ export default async function FriendLibraryPage({ params }: FriendLibraryPagePro
           <p className="mt-2 text-slate-300">Read-only preview. You can view their games, but only they can edit them.</p>
         </div>
       </section>
-      <LibraryView games={games} readOnly />
+      <FriendLibraryView friendId={userId} games={games} />
     </main>
   );
 }
