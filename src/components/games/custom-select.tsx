@@ -2,11 +2,11 @@
 
 import { ChevronDown } from "lucide-react";
 import { createPortal } from "react-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 type CustomSelectOption = { value: string; label: string; displayLabel?: string };
 type CustomSelectChangeEvent = { target: { value: string } };
-type MenuPosition = { left: number; top: number; width: number };
+type MenuPosition = { left: number; maxHeight: number; placement: "bottom" | "top"; top: number; width: number };
 
 type CustomSelectProps = {
   className?: string;
@@ -45,24 +45,40 @@ export function CustomSelect({ className, defaultValue = "", disabled, onChange,
     onOpenChange?.(isOpen);
   }, [isOpen, onOpenChange]);
 
-  useEffect(() => {
-    if (!isOpen) return;
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setMenuPosition(null);
+      return;
+    }
 
     function updateMenuPosition() {
       const rect = rootRef.current?.getBoundingClientRect();
       if (!rect) return;
-      setMenuPosition({ left: rect.left + rect.width / 2 + window.scrollX, top: rect.bottom + window.scrollY + 4, width: rect.width });
+
+      const estimatedMenuHeight = options.length * 37;
+      const documentBottom = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+      const buttonBottom = window.scrollY + rect.bottom;
+      const buttonTop = window.scrollY + rect.top;
+      const menuBottom = buttonBottom + 4 + estimatedMenuHeight;
+      const shouldOpenUp = menuBottom > documentBottom;
+      const availableSpace = shouldOpenUp ? buttonTop : documentBottom - buttonBottom - 4;
+
+      setMenuPosition({
+        left: window.scrollX + rect.left + rect.width / 2,
+        maxHeight: Math.max(148, availableSpace - 12),
+        placement: shouldOpenUp ? "top" : "bottom",
+        top: shouldOpenUp ? buttonTop - 4 : buttonBottom + 4,
+        width: rect.width
+      });
     }
 
     updateMenuPosition();
     window.addEventListener("resize", updateMenuPosition);
-    window.addEventListener("scroll", updateMenuPosition, true);
 
     return () => {
       window.removeEventListener("resize", updateMenuPosition);
-      window.removeEventListener("scroll", updateMenuPosition, true);
     };
-  }, [isOpen]);
+  }, [isOpen, options.length]);
 
   useEffect(() => {
     function closeOnOutsidePointer(event: PointerEvent) {
@@ -78,6 +94,7 @@ export function CustomSelect({ className, defaultValue = "", disabled, onChange,
   function selectOption(nextValue: string) {
     setInternalValue(nextValue);
     onChange?.({ target: { value: nextValue } });
+    setMenuPosition(null);
     setIsOpen(false);
   }
 
@@ -85,9 +102,16 @@ export function CustomSelect({ className, defaultValue = "", disabled, onChange,
     <div
       ref={menuRef}
       data-readyup-dropdown-menu="true"
-      className="absolute z-[2000] overflow-hidden rounded-md border border-line bg-surface shadow-xl"
+      className="absolute z-[2000] overflow-y-auto rounded-md border border-line bg-surface shadow-xl"
       role="listbox"
-      style={{ left: menuPosition.left, top: menuPosition.top, minWidth: menuMinWidth, transform: "translateX(-50%)", width: menuPosition.width }}
+      style={{
+        left: menuPosition.left,
+        maxHeight: menuPosition.maxHeight,
+        minWidth: menuMinWidth,
+        top: menuPosition.top,
+        transform: menuPosition.placement === "top" ? "translate(-50%, -100%)" : "translateX(-50%)",
+        width: menuPosition.width
+      }}
     >
       {options.map((option) => {
         const isSelected = option.value === selectedValue;
@@ -112,7 +136,10 @@ export function CustomSelect({ className, defaultValue = "", disabled, onChange,
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={() => {
+          setMenuPosition(null);
+          setIsOpen((current) => !current);
+        }}
         className="relative w-full rounded-md border border-line bg-surface py-2 pl-3 pr-8 text-center text-sm text-white outline-none ring-blue-400 hover:bg-white/5 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
         aria-haspopup="listbox"
         aria-expanded={isOpen}

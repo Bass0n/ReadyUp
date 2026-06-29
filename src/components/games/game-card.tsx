@@ -155,7 +155,12 @@ export function GameCard({ item, readOnly = false }: GameCardProps) {
             <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
         ) : null}
-        <div className={"pointer-events-none absolute inset-x-0 bottom-0 z-10 translate-y-4 rounded-b-lg bg-surface p-4 opacity-0 transition duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 " + (isControlsOpen ? "pointer-events-auto translate-y-0 opacity-100" : "")}>
+        <div
+          className={
+            "absolute inset-x-0 bottom-0 z-10 rounded-b-lg bg-surface p-4 transition duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 " +
+            (isControlsOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0")
+          }
+        >
           <Link href={`/games/${item.game.slug}`} className="block font-semibold text-white hover:text-blue-200">
             {item.game.name}
           </Link>
