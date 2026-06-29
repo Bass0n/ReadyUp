@@ -4,9 +4,10 @@ import Link from "next/link";
 import { Toaster } from "sonner";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { HeaderGameSearch } from "@/components/games/header-game-search";
+import { FriendsNavLink } from "@/components/navigation/friends-nav-link";
 import { ReadyUpLink } from "@/components/navigation/readyup-link";
 import { UserAvatar } from "@/components/profile/user-avatar";
-import { getUserProfile } from "@/lib/firebase/firestore";
+import { getIncomingFriendRequestCount, getUserProfile } from "@/lib/firebase/firestore";
 import { getCurrentUser } from "@/lib/firebase/session";
 import "./globals.css";
 
@@ -19,7 +20,12 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const user = await getCurrentUser();
-  const profile = user ? await getUserProfile(user.uid) : null;
+  const [profile, incomingFriendRequestCount] = user
+    ? await Promise.all([
+      getUserProfile(user.uid),
+      getIncomingFriendRequestCount(user.uid)
+    ])
+    : [null, 0];
 
   return (
     <html lang="en">
@@ -31,9 +37,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <div className="flex items-center justify-end gap-3 text-sm text-slate-200 max-md:justify-start">
               {user ? (
                 <>
-                  <Link className="rounded-md px-3 py-2 hover:bg-white/10" href="/friends">
-                    Friends
-                  </Link>
+                  <FriendsNavLink initialIncomingCount={incomingFriendRequestCount} />
                   <Link className="rounded-full p-1 hover:bg-white/10" href="/profile" aria-label="Profile">
                     <UserAvatar
                       profile={{

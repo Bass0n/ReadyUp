@@ -307,6 +307,11 @@ export async function getFriendsOverview(userId: string) {
   };
 }
 
+export async function getIncomingFriendRequestCount(userId: string) {
+  const snapshot = await adminDb().collection("friend_requests").where("to.userId", "==", userId).get();
+  return snapshot.docs.map(mapFriendRequestDoc).filter((request) => request.status === "pending").length;
+}
+
 export async function respondToFriendRequest(userId: string, requestId: string, action: "accept" | "deny") {
   const requestSnapshot = await friendRequestRef(requestId).get();
   if (!requestSnapshot.exists) throw new Error("Friend request not found.");
