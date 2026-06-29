@@ -345,6 +345,18 @@ export async function cancelFriendRequest(userId: string, requestId: string) {
   await requestSnapshot.ref.update({ status: "denied", updatedAt: now() });
 }
 
+export async function removeFriend(userId: string, friendId: string) {
+  if (userId === friendId) throw new Error("You cannot remove yourself as a friend.");
+
+  const friendshipSnapshot = await friendRef(userId, friendId).get();
+  if (!friendshipSnapshot.exists) throw new Error("That user is not in your friends list.");
+
+  const batch = adminDb().batch();
+  batch.delete(friendRef(userId, friendId));
+  batch.delete(friendRef(friendId, userId));
+  await batch.commit();
+}
+
 export async function upsertGameCache(game: NormalizedGame) {
   await gameCacheRef(game.rawgId).set(
     {

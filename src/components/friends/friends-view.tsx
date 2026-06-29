@@ -103,6 +103,26 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
     });
   }
 
+  function removeFriend(friend: FriendProfile) {
+    const friendName = friend.displayName || friend.email || "this friend";
+    if (!window.confirm(`Remove ${friendName} from your friends list?`)) return;
+
+    startTransition(async () => {
+      const response = await fetch(`/api/friends/${friend.userId}`, {
+        method: "DELETE"
+      });
+
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        toast.error(body?.error ?? "Could not remove friend.");
+        return;
+      }
+
+      toast.success("Friend removed.");
+      await refreshFriends();
+    });
+  }
+
   return (
     <div className="grid gap-6">
       <section className="rounded-lg border border-line bg-panel p-6">
@@ -147,9 +167,14 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
           {overview.friends.length ? overview.friends.map((friend) => (
             <div key={friend.userId} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface p-3">
               <UserSummary profile={friend} />
-              <Link className="rounded-md bg-blue-500 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-400" href={`/friends/${friend.userId}/library`}>
-                View library
-              </Link>
+              <div className="flex items-center gap-2">
+                <button disabled={isPending} onClick={() => removeFriend(friend)} className="inline-flex h-10 box-border items-center justify-center rounded-md border border-red-300/40 px-3 text-sm font-semibold leading-none text-red-100 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60">
+                  Remove friend
+                </button>
+                <Link className="inline-flex h-10 box-border items-center justify-center rounded-md border border-blue-500 bg-blue-500 px-3 text-sm font-semibold leading-none text-white hover:border-blue-400 hover:bg-blue-400" href={`/friends/${friend.userId}/library`}>
+                  View library
+                </Link>
+              </div>
             </div>
           )) : <p className="text-sm text-slate-300">No friends yet.</p>}
         </div>
