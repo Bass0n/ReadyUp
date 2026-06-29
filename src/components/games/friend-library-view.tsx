@@ -6,6 +6,7 @@ import type { LibraryGame } from "@/lib/types";
 
 type FriendLibraryViewProps = {
   friendId: string;
+  friendName: string;
   games: LibraryGame[];
 };
 
@@ -13,7 +14,7 @@ type FriendLibraryResponse = {
   games?: LibraryGame[];
 };
 
-export function FriendLibraryView({ friendId, games }: FriendLibraryViewProps) {
+export function FriendLibraryView({ friendId, friendName, games }: FriendLibraryViewProps) {
   const [liveGames, setLiveGames] = useState(games);
 
   const refreshLibrary = useCallback(async () => {
@@ -43,5 +44,5 @@ export function FriendLibraryView({ friendId, games }: FriendLibraryViewProps) {
     };
   }, [refreshLibrary]);
 
-  return <LibraryView games={liveGames} readOnly />;
+  return <LibraryView games={liveGames} readOnly ownerName={friendName} />;
 }

@@ -166,7 +166,7 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
         <div className="mt-4 grid gap-3">
           {overview.friends.length ? overview.friends.map((friend) => (
             <div key={friend.userId} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface p-3">
-              <UserSummary profile={friend} />
+              <UserSummary profile={friend} href={`/friends/${friend.userId}/library`} />
               <div className="flex items-center gap-2">
                 <button disabled={isPending} onClick={() => removeFriend(friend)} className="inline-flex h-10 box-border items-center justify-center rounded-md border border-red-300/40 px-3 text-sm font-semibold leading-none text-red-100 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60">
                   Remove friend
@@ -197,8 +197,8 @@ export function FriendsView({ friends, incomingRequests, outgoingRequests }: Fri
   );
 }
 
-function UserSummary({ profile }: { profile: FriendProfile }) {
-  return (
+function UserSummary({ profile, href }: { profile: FriendProfile; href?: string }) {
+  const content = (
     <div className="flex items-center gap-3">
       <UserAvatar profile={profile} size="sm" />
       <div>
@@ -206,5 +206,13 @@ function UserSummary({ profile }: { profile: FriendProfile }) {
         {profile.email ? <p className="mt-1 text-sm text-slate-400">{profile.email}</p> : null}
       </div>
     </div>
+  );
+
+  if (!href) return content;
+
+  return (
+    <Link className="rounded-md outline-none ring-blue-400 hover:text-blue-200 focus-visible:ring-2" href={href}>
+      {content}
+    </Link>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { SearchResultItem } from "@/components/games/search-result-item";
@@ -94,7 +94,7 @@ export function HeaderGameSearch() {
 
   return (
     <div ref={rootRef} className="relative w-full justify-self-center">
-      <label className="relative block">
+      <div className="relative block">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
           value={query}
@@ -104,9 +104,20 @@ export function HeaderGameSearch() {
           }}
           onFocus={() => setIsOpen(true)}
           placeholder="Search games..."
-          className="w-full rounded-md border border-line bg-panel py-2 pl-9 pr-3 text-sm text-white outline-none ring-blue-400 placeholder:text-slate-500 focus:ring-2"
+          className="w-full rounded-md border border-line bg-panel py-2 pl-9 pr-10 text-sm text-white outline-none ring-blue-400 placeholder:text-slate-500 focus:ring-2"
         />
-      </label>
+        {query ? (
+          <button
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={clearSearch}
+            aria-label="Clear game search"
+            className="absolute right-3 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full bg-slate-700 text-slate-200 transition hover:bg-slate-600 hover:text-white"
+          >
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
       {showPanel ? (
         <div className="absolute left-0 right-0 top-full z-[1100] mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-line bg-surface p-2 shadow-2xl">
           {isPending ? <p className="p-3 text-sm text-slate-300">Searching...</p> : null}

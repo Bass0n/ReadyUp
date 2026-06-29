@@ -24,17 +24,18 @@ export default async function FriendLibraryPage({ params }: FriendLibraryPagePro
   ]);
 
   if (!friend) notFound();
+  const friendName = friend.displayName || friend.email || "Friend";
 
   return (
     <main className="mx-auto grid max-w-[100rem] gap-8 px-4 py-8">
       <section className="flex items-center gap-4">
         <UserAvatar profile={friend} size="lg" />
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{friend.displayName || friend.email || "Friend"}&apos;s library</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{friendName}&apos;s library</h1>
           <p className="mt-2 text-slate-300">Read-only preview. You can view their games, but only they can edit them.</p>
         </div>
       </section>
-      <FriendLibraryView friendId={userId} games={games} />
+      <FriendLibraryView friendId={userId} friendName={friendName} games={games} />
     </main>
   );
 }

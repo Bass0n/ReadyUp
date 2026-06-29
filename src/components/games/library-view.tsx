@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { GameCard } from "@/components/games/game-card";
 import { GAME_STATUSES, type GameStatus } from "@/lib/statuses";
@@ -12,6 +12,7 @@ type LibrarySort = "title" | "rating-desc" | "rating-asc" | "started-desc" | "fi
 type LibraryViewProps = {
   games: LibraryGame[];
   readOnly?: boolean;
+  ownerName?: string;
 };
 
 function filterLabel(filter: LibraryFilter) {
@@ -54,10 +55,11 @@ function sortGames(games: LibraryGame[], sort: LibrarySort) {
   });
 }
 
-export function LibraryView({ games, readOnly = false }: LibraryViewProps) {
+export function LibraryView({ games, readOnly = false, ownerName }: LibraryViewProps) {
   const [activeFilter, setActiveFilter] = useState<LibraryFilter>("All");
   const [activeSort, setActiveSort] = useState<LibrarySort>("title");
   const [libraryQuery, setLibraryQuery] = useState("");
+  const searchPlaceholder = ownerName ? `Search ${ownerName}'s library...` : "Search your library...";
   const filters: LibraryFilter[] = ["All", ...GAME_STATUSES];
 
   const counts = useMemo(() => {
@@ -82,9 +84,9 @@ export function LibraryView({ games, readOnly = false }: LibraryViewProps) {
   if (!games.length) {
     return (
       <div className="rounded-lg border border-dashed border-line bg-panel/60 p-8 text-center">
-        <h2 className="text-xl font-semibold">Your library is empty.</h2>
+        <h2 className="text-xl font-semibold">{ownerName ? `${ownerName}'s library is empty.` : "Your library is empty."}</h2>
         <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-300">
-          Search for a game above and add it with a status and optional rating.
+          {ownerName ? "They have not added any games yet." : "Search for a game above and add it with a status and optional rating."}
         </p>
       </div>
     );
@@ -120,15 +122,26 @@ export function LibraryView({ games, readOnly = false }: LibraryViewProps) {
 
       <div className="grid items-center gap-3 rounded-md bg-blue-500 px-4 py-2 text-white lg:grid-cols-[1fr_minmax(260px,420px)_1fr]">
         <h2 className="text-sm font-bold uppercase tracking-wide">{filterLabel(activeFilter)}</h2>
-        <label className="relative block w-full justify-self-center">
+        <div className="relative block w-full justify-self-center">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             value={libraryQuery}
             onChange={(event) => setLibraryQuery(event.target.value)}
-            placeholder="Search your library..."
-            className="w-full rounded-md border border-blue-300/40 bg-surface py-1.5 pl-9 pr-3 text-sm text-white outline-none ring-white/40 placeholder:text-slate-500 focus:ring-2"
+            placeholder={searchPlaceholder}
+            className="w-full rounded-md border border-blue-300/40 bg-surface py-1.5 pl-9 pr-10 text-sm text-white outline-none ring-white/40 placeholder:text-slate-500 focus:ring-2"
           />
-        </label>
+          {libraryQuery ? (
+            <button
+              type="button"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => setLibraryQuery("")}
+              aria-label="Clear library search"
+              className="absolute right-3 top-1/2 grid h-5 w-5 -translate-y-1/2 place-items-center rounded-full bg-slate-700 text-slate-200 transition hover:bg-slate-600 hover:text-white"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
         <label className="flex items-center justify-end gap-2 text-sm font-semibold lg:justify-self-end">
           Sort
           <select
